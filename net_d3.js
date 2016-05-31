@@ -17,6 +17,8 @@ function User(id, name){
 }
 
 oReq.onload = function(){
+    
+    console.log(this.response);
 
     //fill arrays of unprocessed data
     var split = this.response.split("~~#");
