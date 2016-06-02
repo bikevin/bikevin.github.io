@@ -1,10 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <title>Title</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <title>Protocol Viewer</title>
+
+    <!-- Bootstrap -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
 </head>
 <body>
-    <p>"hello fuckers is this working"</p>
+<div>
+    <table id="pulse_table" class="table"></table>
+    <table id="fixed_table" class="table"></table>
+
+    <button class="btn-default btn-lg" type="button" onclick="printValues()">Submit</button>
+    <input type="file" id="input" onchange="handleFiles(this.files)">
+    <div id="json_display">
+    </div>
+</div>
+
+<!-- Modal -->
+<div id="columnModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Column</h4>
+            </div>
+            <div class="modal-body">
+                <input id="column_name" data-location="N/A" placeholder="Enter column name" class="form-control col-lg" type="text"/>
+                <label><input type="checkbox" id="col_array"> Nested Array</label>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="addColumn()">Update Protocol</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="rowModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">New Row</h4>
+            </div>
+            <div class="modal-body">
+                <input id="row_name" data-location="N/A" placeholder="Enter row position" class="form-control col-lg" type="text"/>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="addRow()">Update Protocol</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<!-- Include all compiled plugins (below), or include individual files as needed -->
+<script src="js/bootstrap.min.js"></script>
+<script src="protocol_parse.js"></script>
 </body>
 </html>
