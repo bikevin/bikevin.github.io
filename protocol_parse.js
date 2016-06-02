@@ -314,14 +314,14 @@ var buildJson = function(jsonParts){
     para.appendChild(node);
 };
 
-var showButtons = function(elementIn){
+/*var showButtons = function(elementIn){
     console.log(elementIn.id)
     while(elementIn.nodeName.localeCompare("TABLE") != 0) {
         console.log(elementIn.nodeName);
         elementIn = elementIn.parentNode;
     }
     console.log(elementIn.id);
-};
+};*/
 
 var deleteColumn = function(element){
     var colNum = element.id;
