@@ -157,10 +157,10 @@ var populateFixedTable = function(protocol, fixedInfo){
             var field = protocol[fixedInfo["fixedVars"][j - 1]];
             if(Array.isArray(field)){
                 data = field[i];
-                var id = String(fixedInfo["fixedVars"][j - 1]) + "~~#" + String(i);
+                var id = String(fixedInfo["fixedVars"][j - 1]) + "~~#" + String(i + 1);
             } else if (i == 0){
                 data = field;
-                id = String(fixedInfo["fixedVars"][j - 1]) + "~~#" + String(i) + "~~#" + "EMPTY";
+                id = String(fixedInfo["fixedVars"][j - 1]) + "~~#" + String(i + 1) + "~~#" + "EMPTY";
             }
 
 
