@@ -66,26 +66,28 @@ var populatePulseTable = function(protocol, pulseInfo){
     for(var i = 1; i < pulseInfo["pulseVars"].length + 1; i++){
         cell = row.insertCell(i);
         cell.innerHTML = "<b>" + pulseInfo["pulseVars"][i - 1] + " </b>";
-        /*cell.innerHTML = "<button class='btn-default btn-sm' type='button' onclick='showButtons(this)'>"
-            +pulseInfo["pulseVars"][i - 1]
-            +"</button>";*/
 
-        cell.innerHTML += "<button class='btn-default btn-xs' id='"
+        cell.innerHTML += "<a id='"
             +String(i)
-            +"' type='button' onclick='deleteColumn(this)'>"
-            +"<span class='glyphicon glyphicon-remove' aria-label='delete column'></span>"
-            +"</button>"
+            +"' class='close' onclick='deleteColumn(this)'>"
+            +"&times;"
+            +"</a>";
     }
 
     for(i = 1; i < pulseInfo["pulses"] + 1; i++){
         row = pulseTable.insertRow(i);
         cell = row.insertCell(0);
         cell.innerHTML = "<b>" + String(i) + " </b>";
-        cell.innerHTML += "<button class='btn-default btn-xs' id='"
+        /*cell.innerHTML += "<button class='btn-default btn-xs' id='"
             +String(i)
             +"' type='button' onclick='deleteRow(this)'>"
-            +"<span class='glyphicon glyphicon-remove' aria-label='delete row'></span>"
-            +"</button>";
+            +"<span class='close' aria-label='delete row'>&times;</span>"
+            +"</button>";*/
+        cell.innerHTML += "<a id='"
+            +String(i)
+            +"' class='close' onclick='deleteRow(this)'>"
+            +"&times;"
+            +"</a>";
         for (var j = 1; j < pulseInfo["pulseVars"].length + 1; j++) {
             cell = row.insertCell(j);
             var data = protocol[pulseInfo["pulseVars"][j - 1]][i - 1];
@@ -129,20 +131,22 @@ var populateFixedTable = function(protocol, fixedInfo){
     for(var i = 0; i < fixedInfo["fixedVars"].length; i++){
         var row = fixedTable.insertRow(i);
         var cell = row.insertCell(0);
-        cell.innerHTML = '<b>' + fixedInfo["fixedVars"][i] + ' </b><button class="btn-default btn-xs" id="' +
-            String(i + 1) +
-            '" type="button" ' +
-            'onclick="deleteColumn(this)"><span class="glyphicon glyphicon-remove" aria-label="delete column"></span>' +
-            '</button>';
+        cell.innerHTML = '<b style="display: inline-block; float: left;">' + fixedInfo["fixedVars"][i]+ " </b>" + "<a id='"
+        +String(i)
+        +"' class='close' onclick='deleteRow(this)' style='float: left; margin-left: 10px;'>"
+        +"&times;</a>";
 
         var field = protocol[fixedInfo["fixedVars"][i]];
         var id = String(fixedInfo["fixedVars"][i]);
 
-        cell.innerHTML += "<input type='text' class='form-control form-control-borderless col-lg-1' id='"
+        cell.innerHTML += "<textarea class='form-control form-control-borderless col-lg-1' id='"
             + id
-            + "' value='"
+            + "' onkeyup='textAreaAdjust(this);' style='height: auto;' >"
             + JSON.stringify(field)
-            + "'/>";
+            +"</textarea>";
+
+        var element = document.getElementById(id);
+        textAreaAdjust(element);
     }
     row = fixedTable.insertRow(fixedTable.rows.length);
     cell = row.insertCell(0);
@@ -151,6 +155,8 @@ var populateFixedTable = function(protocol, fixedInfo){
         '" type="button" data-toggle="modal" data-target="#rowModal"' +
         'onclick="updateModalLocation(this);"><span class="glyphicon glyphicon-plus" aria-label="add row"></span>' +
         '</button>';
+
+
 
     //legacy code
    /* var row = fixedTable.insertRow(0);
@@ -241,7 +247,7 @@ var printValues = function(){
     table = document.getElementById("fixed_table");
     for(i = 0; i < table.rows.length - 1; i++) {
         temp = {};
-        var data = table.rows[i].cells[0].getElementsByTagName("INPUT")[0];
+        var data = table.rows[i].cells[0].getElementsByTagName("TEXTAREA")[0];
         temp[data.id] = JSON.parse(data.value);
         newJsonParts.push(temp);
     }
@@ -337,7 +343,7 @@ var deleteColumn = function(element){
 
     var table = document.getElementById(element.id);
     var rowCount = table.rows.length;
-    for(var i = 0; i < rowCount - 1; i++){
+    for(var i = 0; i < rowCount - 2; i++){
         table.rows[i].deleteCell(colNum);
     }
 
@@ -360,9 +366,9 @@ var updateRowIndices = function(table){
     var rows = table.rows;
     var length = rows.length;
     var cellNum = rows[1].cells.length;
-    for(var i = 1; i < length - 1; i++){
+    for(var i = 1; i < length; i++){
         rows[i].cells[0].getElementsByTagName("B")[0].textContent = String(i);
-        rows[i].cells[0].getElementsByTagName("BUTTON")[0].id = i;
+        rows[i].cells[0].getElementsByTagName("A")[0].id = i;
         for(var j = 1; j < cellNum - 1; j++){
             var idStr = rows[i].cells[j].childNodes[0].id;
             idStr = idStr.split("~~#");
@@ -384,7 +390,7 @@ var updateColumnIndices = function(table){
     var rows = table.rows;
     var length = rows[0].cells.length;
     for(var i = 1; i < length; i++){
-        rows[0].cells[i].getElementsByTagName("BUTTON")[0].id = i;
+        rows[0].cells[i].getElementsByTagName("A")[0].id = i;
     }
 };
 
@@ -393,7 +399,6 @@ var addColumn = function(){
     var colName = input.value;
     var nested = document.getElementById("col_array").checked;
     var table = document.getElementById(input.getAttribute("data-location"));
-    console.log(table);
     var rowLength = table.rows.length;
     var colLength = table.rows[1].cells.length;
 
@@ -412,11 +417,11 @@ var addColumn = function(){
             if (i == 0) {
                 cell.innerHTML = "<b>" + colName + " </b>";
 
-                cell.innerHTML += "<button class='btn-default btn-xs' id='"
-                    + String(colLength)
-                    + "' type='button' onclick='deleteColumn(this)'>"
-                    + "<span class='glyphicon glyphicon-remove' aria-label='delete column'></span>"
-                    + "</button>"
+                cell.innerHTML += "<a id='"
+                    +String(colLength)
+                    +"' class='close' onclick='deleteColumn(this)'>"
+                    +"&times;"
+                    +"</a>";
             } else {
                 if (nested) {
                     var id = colName + "~~#" + String(i) + "~~#" + string3;
@@ -450,11 +455,11 @@ var addRow = function(){
                 var nested = (table.rows[1].cells[i].id.split("~~#").length == 3);
                 if (i == 0) {
                     cell.innerHTML = "<b>" + String(rowLoc) + " </b>";
-                    cell.innerHTML += "<button class='btn-default btn-xs' id='"
-                        + String(rowLoc)
-                        + "' type='button' onclick='deleteRow(this)'>"
-                        + "<span class='glyphicon glyphicon-remove' aria-label='delete row'></span>"
-                        + "</button>";
+                    cell.innerHTML += "<a id='"
+                        +String(rowLoc)
+                        +"' class='close' onclick='deleteRow(this)'>"
+                        +"&times;"
+                        +"</a>";
                 } else {
                     if (nested) {
                         var id = colType + "~~#" + i + "~~#" + table.rows[1].cells[i].id.split("~~#")[2];
@@ -472,11 +477,12 @@ var addRow = function(){
     } else {
         row = table.insertRow(table.rows.length - 1);
         cell = row.insertCell(0);
-        cell.innerHTML = '<b>' + rowLoc + ' </b><button class="btn-default btn-xs" id="' +
-            String(table.rows.length) +
-            '" type="button" ' +
-            'onclick="deleteColumn(this)"><span class="glyphicon glyphicon-remove" aria-label="delete column"></span>' +
-            '</button>';
+        cell.innerHTML = '<b>' + rowLoc + ' </b>';
+        cell.innerHTML += "<a id='"
+            +String(table.rows.length)
+            +"' class='close' onclick='deleteRow(this)'>"
+            +"&times;"
+            +"</a>";
         cell.innerHTML += "<input type='text' class='form-control form-control-borderless col-lg-1' id='"
             + rowLoc
             + "' value=''/>";
@@ -489,6 +495,11 @@ var updateModalLocation = function(element){
     document.getElementById("row_name")
         .setAttribute("data-location", element.getAttribute("data-location"));
 };
+
+var textAreaAdjust =  function(element) {
+    element.style.height = "1px";
+    element.style.height = (element.scrollHeight)+"px";
+}
 
 
 
