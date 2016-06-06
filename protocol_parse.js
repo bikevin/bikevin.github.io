@@ -94,7 +94,7 @@ var populatePulseTable = function(protocol, pulseInfo){
             } else {
                 id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i);
             }
-            cell.innerHTML = "<input type='text' class='form-control col-lg' id='"
+            cell.innerHTML = "<input type='text' class='form-control form-control-borderless col-lg' id='"
                 + id
                 + "' value='"
                 + data
@@ -102,7 +102,7 @@ var populatePulseTable = function(protocol, pulseInfo){
         }
     }
 
-    row = pulseTable.rows[0];
+    /*row = pulseTable.rows[0];
     id = row.cells.length;
     cell = row.insertCell(id);
     cell.innerHTML = '<b>Add Column </b><button class="btn-default btn-xs" id="' +
@@ -117,7 +117,7 @@ var populatePulseTable = function(protocol, pulseInfo){
         String(id) +
         '" type="button" data-toggle="modal" data-target="#rowModal"' +
         'onclick="updateModalLocation(this);"><span class="glyphicon glyphicon-plus" aria-label="add row"></span>' +
-        '</button>';
+        '</button>';*/
 };
 
 var populateFixedTable = function(protocol, fixedInfo){
@@ -126,7 +126,34 @@ var populateFixedTable = function(protocol, fixedInfo){
     //clear table
     fixedTable.innerHTML = "";
 
-    var row = fixedTable.insertRow(0);
+    for(var i = 0; i < fixedInfo["fixedVars"].length; i++){
+        var row = fixedTable.insertRow(i);
+        var cell = row.insertCell(0);
+        cell.innerHTML = '<b>' + fixedInfo["fixedVars"][i] + ' </b><button class="btn-default btn-xs" id="' +
+            String(i + 1) +
+            '" type="button" ' +
+            'onclick="deleteColumn(this)"><span class="glyphicon glyphicon-remove" aria-label="delete column"></span>' +
+            '</button>';
+
+        var field = protocol[fixedInfo["fixedVars"][i]];
+        var id = String(fixedInfo["fixedVars"][i]);
+
+        cell.innerHTML += "<input type='text' class='form-control form-control-borderless col-lg-1' id='"
+            + id
+            + "' value='"
+            + JSON.stringify(field)
+            + "'/>";
+    }
+    row = fixedTable.insertRow(fixedTable.rows.length);
+    cell = row.insertCell(0);
+    cell.innerHTML = '<b>Add Fixed Var</b><button class="btn-default btn-xs" id="' +
+        String(id) +
+        '" type="button" data-toggle="modal" data-target="#rowModal"' +
+        'onclick="updateModalLocation(this);"><span class="glyphicon glyphicon-plus" aria-label="add row"></span>' +
+        '</button>';
+
+    //legacy code
+   /* var row = fixedTable.insertRow(0);
     var cell;
     cell = row.insertCell(0);
     cell.innerHTML = "<b>#</b>";
@@ -193,7 +220,7 @@ var populateFixedTable = function(protocol, fixedInfo){
         String(id) +
         '" type="button" data-toggle="modal" data-target="#rowModal"' +
         'onclick="updateModalLocation(this);"><span class="glyphicon glyphicon-plus" aria-label="add row"></span>' +
-        '</button>';
+        '</button>';*/
 };
 
 var printValues = function(){
@@ -212,16 +239,11 @@ var printValues = function(){
     }
 
     table = document.getElementById("fixed_table");
-    for(i = 0; i < table.rows.length; i++){
-        for( j = 0; j < table.rows[i]["cells"].length; j++){
-            element = table.rows[i]["cells"][j].getElementsByClassName("form-control");
-            temp = [];
-            if(element.length != 0){
-                temp.push(element[0].value);
-                temp.push(element[0].getAttribute("id"));
-                newJsonParts.push(temp);
-            }
-        }
+    for(i = 0; i < table.rows.length - 1; i++) {
+        temp = {};
+        var data = table.rows[i].cells[0].getElementsByTagName("INPUT")[0];
+        temp[data.id] = JSON.parse(data.value);
+        newJsonParts.push(temp);
     }
 
     buildJson(newJsonParts);
@@ -230,75 +252,57 @@ var printValues = function(){
 var buildJson = function(jsonParts){
     var finalJson = {};
     jsonParts.forEach(function(d){
-        var locString = d[1].split("~~#");
-        locString[1]--;
-        if(locString.length == 3){
-            if(finalJson.hasOwnProperty(locString[0])){
-                if(d[0].localeCompare("") != 0) {
-                    if(!isNaN(parseInt(d[0]))) {
-                        finalJson[locString[0]][parseInt(locString[1])] = [parseInt(d[0])];
-                    } else {
-                        finalJson[locString[0]][parseInt(locString[1])] = [d[0]];
-                    }
-                }
-            } else {
-                finalJson[locString[0]] = [];
-                if(d[0].localeCompare("") != 0) {
-                    if(!isNaN(parseInt(d[0]))) {
-                        if(locString[2].localeCompare("EMPTY") == 0){
-                            finalJson[locString[0]] = parseInt(d[0]);
-                        } else {
+        if(Array.isArray(d)) {
+            var locString = d[1].split("~~#");
+            locString[1]--;
+            if (locString.length == 3) {
+                if (finalJson.hasOwnProperty(locString[0])) {
+                    if (d[0].localeCompare("") != 0) {
+                        if (!isNaN(parseInt(d[0]))) {
                             finalJson[locString[0]][parseInt(locString[1])] = [parseInt(d[0])];
+                        } else {
+                            finalJson[locString[0]][parseInt(locString[1])] = [d[0]];
                         }
-                    } else {
-                        if(locString[2].localeCompare("EMPTY") == 0){
-                            finalJson[locString[0]] = d[0];
+                    }
+                } else {
+                    finalJson[locString[0]] = [];
+                    if (d[0].localeCompare("") != 0) {
+                        if (!isNaN(parseInt(d[0]))) {
+                            finalJson[locString[0]][parseInt(locString[1])] = [parseInt(d[0])];
                         } else {
                             finalJson[locString[0]][parseInt(locString[1])] = [d[0]];
                         }
                     }
                 }
+            } else {
+                if (finalJson.hasOwnProperty(locString[0])) {
+                    if (d[0].localeCompare("") != 0) {
+                        if (!isNaN(parseInt(d[0]))) {
+                            finalJson[locString[0]][parseInt(locString[1])] = parseInt(d[0]);
+                        } else {
+                            finalJson[locString[0]][parseInt(locString[1])] = d[0];
+                        }
+                    }
+                } else {
+                    finalJson[locString[0]] = [];
+                    if (d[0].localeCompare("") != 0) {
+                        if (!isNaN(parseInt(d[0]))) {
+                            finalJson[locString[0]][parseInt(locString[1])] = parseInt(d[0]);
+                        } else {
+                            finalJson[locString[0]][parseInt(locString[1])] = d[0];
+                        }
+                    }
+                }
             }
         } else {
-            if(finalJson.hasOwnProperty(locString[0])){
-                if(d[0].localeCompare("") != 0) {
-                    if(!isNaN(parseInt(d[0]))) {
-                        finalJson[locString[0]][parseInt(locString[1])] = parseInt(d[0]);
-                    } else {
-                        if(d[0].indexOf(",") != -1){
-                            var environmental = d[0].split(",");
-                            environmental.forEach(function(d, index) {
-                                if(!isNaN(parseInt(d))){
-                                    environmental[index] = parseInt(d);
-                                }
-                            });
-                            finalJson[locString[0]][parseInt(locString[1])] = environmental;
-                        }else {
-                            finalJson[locString[0]][parseInt(locString[1])] = d[0];
-                        }
-                    }
-                }
+            var key = Object.keys(d)[0];
+            if(!isNaN(parseInt(d[key]))){
+                finalJson[key] = parseInt(d[key]);
             } else {
-                finalJson[locString[0]] = [];
-                if(d[0].localeCompare("") != 0) {
-                    if(!isNaN(parseInt(d[0]))) {
-                        finalJson[locString[0]][parseInt(locString[1])] = parseInt(d[0]);
-                    } else {
-                        if(d[0].indexOf(",") != -1){
-                            environmental = d[0].split(",");
-                            environmental.forEach(function(d, index) {
-                               if(!isNaN(parseInt(d))){
-                                   environmental[index] = parseInt(d);
-                               }
-                            });
-                            finalJson[locString[0]][parseInt(locString[1])] = environmental;
-                        }else {
-                            finalJson[locString[0]][parseInt(locString[1])] = d[0];
-                        }
-                    }
-                }
+                finalJson[key] = d[key];
             }
         }
+
     });
 
     var div = document.getElementById("json_display");
@@ -312,6 +316,8 @@ var buildJson = function(jsonParts){
     div.appendChild(para);
     var node = document.createTextNode(JSON.stringify([finalJson]));
     para.appendChild(node);
+
+    console.log(finalJson);
 };
 
 /*var showButtons = function(elementIn){
@@ -387,7 +393,7 @@ var addColumn = function(){
     var colName = input.value;
     var nested = document.getElementById("col_array").checked;
     var table = document.getElementById(input.getAttribute("data-location"));
-
+    console.log(table);
     var rowLength = table.rows.length;
     var colLength = table.rows[1].cells.length;
 
@@ -417,7 +423,7 @@ var addColumn = function(){
                 } else {
                     id = colName + "~~#" + String(i);
                 }
-                cell.innerHTML = "<input type='text' class='form-control col-lg' id='"
+                cell.innerHTML = "<input type='text' class='form-control form-control-borderless col-lg' id='"
                     + id
                     + "' value=''/>";
             }
@@ -427,7 +433,6 @@ var addColumn = function(){
     updateColumnIndices(table);
 };
 
-//TODO check the input row to make sure it's a valid row
 var addRow = function(){
     var input = document.getElementById("row_name");
     var rowLoc = input.value;
@@ -435,42 +440,54 @@ var addRow = function(){
     var cellNum = table.rows[1].cells.length;
     var numRows = table.rows.length;
 
-    if(!isNaN(parseInt(rowLoc)) && (parseInt(rowLoc) > -1 && parseInt(rowLoc) < numRows)){
-        var row = table.insertRow(parseInt(rowLoc));
-        for(var i = 0; i < cellNum; i++){
-            var cell = row.insertCell(i);
-            var colType = table.rows[0].cells[i].getElementsByTagName("B")[0].textContent;
-            colType = colType.split(" ")[0];
-            var nested = (table.rows[1].cells[i].id.split("~~#").length == 3);
-            if(i == 0){
-                cell.innerHTML = "<b>" + String(rowLoc) + " </b>";
-                cell.innerHTML += "<button class='btn-default btn-xs' id='"
-                    +String(rowLoc)
-                    +"' type='button' onclick='deleteRow(this)'>"
-                    +"<span class='glyphicon glyphicon-remove' aria-label='delete row'></span>"
-                    +"</button>";
-            } else {
-                if(nested){
-                    var id = colType + "~~#" + i + "~~#" + table.rows[1].cells[i].id.split("~~#")[2];
+    if(table.id.localeCompare("pulse_table") == 0) {
+        if (!isNaN(parseInt(rowLoc)) && (parseInt(rowLoc) > -1 && parseInt(rowLoc) < numRows)) {
+            var row = table.insertRow(parseInt(rowLoc));
+            for (var i = 0; i < cellNum; i++) {
+                var cell = row.insertCell(i);
+                var colType = table.rows[0].cells[i].getElementsByTagName("B")[0].textContent;
+                colType = colType.split(" ")[0];
+                var nested = (table.rows[1].cells[i].id.split("~~#").length == 3);
+                if (i == 0) {
+                    cell.innerHTML = "<b>" + String(rowLoc) + " </b>";
+                    cell.innerHTML += "<button class='btn-default btn-xs' id='"
+                        + String(rowLoc)
+                        + "' type='button' onclick='deleteRow(this)'>"
+                        + "<span class='glyphicon glyphicon-remove' aria-label='delete row'></span>"
+                        + "</button>";
                 } else {
-                    id = colType + "~~#" + i;
+                    if (nested) {
+                        var id = colType + "~~#" + i + "~~#" + table.rows[1].cells[i].id.split("~~#")[2];
+                    } else {
+                        id = colType + "~~#" + i;
+                    }
+                    cell.innerHTML = "<input type='text' class='form-control form-control-borderless col-lg' id='"
+                        + id
+                        + "' value=''/>";
                 }
-                cell.innerHTML = "<input type='text' class='form-control col-lg' id='"
-                    + id
-                    + "' value=''/>";
             }
         }
-    }
 
-    updateRowIndices(table);
+        updateRowIndices(table);
+    } else {
+        row = table.insertRow(table.rows.length - 1);
+        cell = row.insertCell(0);
+        cell.innerHTML = '<b>' + rowLoc + ' </b><button class="btn-default btn-xs" id="' +
+            String(table.rows.length) +
+            '" type="button" ' +
+            'onclick="deleteColumn(this)"><span class="glyphicon glyphicon-remove" aria-label="delete column"></span>' +
+            '</button>';
+        cell.innerHTML += "<input type='text' class='form-control form-control-borderless col-lg-1' id='"
+            + rowLoc
+            + "' value=''/>";
+    }
 };
 
 var updateModalLocation = function(element){
-    while(element.nodeName.localeCompare("TABLE") != 0) {
-        element = element.parentNode;
-    }
-    document.getElementById("column_name").setAttribute("data-location", element.id);
-    document.getElementById("row_name").setAttribute("data-location", element.id);
+    document.getElementById("column_name")
+        .setAttribute("data-location", element.getAttribute("data-location"));
+    document.getElementById("row_name")
+        .setAttribute("data-location", element.getAttribute("data-location"));
 };
 
 

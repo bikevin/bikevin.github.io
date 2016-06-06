@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -10,17 +11,106 @@
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
 
+    <style>
+        .form-control-borderless{
+            border: 0;
+            background: transparent;
+            box-shadow: none;
+        }
+
+        .centered_table_div {
+            display: inline-block;
+            position: relative;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            margin: auto;
+            width: 1200px;
+            max-height: 600px;
+            overflow-y: scroll;
+            background-color: #eeeeee;
+        }
+
+        #pulse_table_div {
+            position: static;
+            display: inline-block;
+            top: 10px;
+            left: 10px;
+            width: 1200px;
+            height: 600px;
+            background-color: #eeeeee;
+        }
+
+        #table_footer {
+            bottom: 0;
+            left: 0;
+            display: inline-block;
+            height: 60px;
+            width: 100%;
+            background-color: linen;
+        }
+
+        #scrollable{
+            overflow-y: scroll;
+            height: 100%;
+        }
+
+        #add_column_button{
+            float: left;
+            top: 0;
+            bottom: 0;
+            margin: auto;
+        }
+
+        #add_row_button{
+            float: right;
+            margin-right: 50px;
+        }
+    </style>
+
 </head>
 <body>
-<div>
-    <table id="pulse_table" class="table"></table>
-    <table id="fixed_table" class="table"></table>
-
-    <button class="btn-default btn-lg" type="button" onclick="printValues()">Submit</button>
-    <input type="file" id="input" onchange="handleFiles(this.files)">
-    <div id="json_display">
+<div style="width: 100%; text-align: center;">
+    <p style="text-align:center;">Pulse Table</p>
+    <div style="display: inline-block;">
+        <input type="file" id="input" onchange="handleFiles(this.files)">
     </div>
 </div>
+<div style="text-align: center;" >
+    <div id="pulse_table_div">
+        <div id="scrollable">
+            <table id="pulse_table" class="table table-hover table-bordered centered"></table>
+        </div>
+        <div id="table_footer">
+            <div id="add_column_button">
+                <b>Add Column</b>
+                <button class="btn-default btn-xs" type="button"
+                        data-toggle="modal" data-target="#columnModal"
+                        onclick="updateModalLocation(this)" data-location="pulse_table">
+                    <span class="glyphicon glyphicon-plus" aria-label="add column"></span>
+                </button>
+            </div>
+            <div id="add_row_button">
+                <b>Add Row</b>
+                <button class="btn-default btn-xs" type="button"
+                        data-toggle="modal" data-target="#rowModal"
+                        onclick="updateModalLocation(this)" data-location="pulse_table">
+                    <span class="glyphicon glyphicon-plus" aria-label="add row"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+    <div id ="fixed_table_div" class="centered_table_div">
+        <table id="fixed_table" class="table"></table>
+    </div>
+    <div id="everything_else" class="centered_table_div">
+    <button class="btn-default btn-lg" type="button" onclick="printValues()">Submit</button>
+    <div id="json_display">
+    </div>
+    </div>
+</div>
+
 
 <!-- Modal -->
 <div id="columnModal" class="modal fade" role="dialog">
