@@ -318,12 +318,13 @@ var buildJson = function(jsonParts){
             div.removeChild(children[i]);
         }
     }
-    var para = document.createElement("p");
+    var para = document.createElement("textarea");
     div.appendChild(para);
-    var node = document.createTextNode(JSON.stringify([finalJson]));
-    para.appendChild(node);
-
-    console.log(finalJson);
+    para.style.width = "100%";
+    /*var node = document.createTextNode(JSON.stringify([finalJson]));
+    para.appendChild(node);*/
+    para.value = JSON.stringify([finalJson]);
+    textAreaAdjust(para);
 };
 
 /*var showButtons = function(elementIn){
