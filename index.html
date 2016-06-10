@@ -33,6 +33,7 @@
             text-align: left;
         }
 
+
         #everything_else{
             display: inline-block;
             position: relative;
@@ -48,28 +49,60 @@
         }
 
         #pulse_table_div {
-            position: static;
+            position: relative;
             display: inline-block;
-            top: 10px;
-            left: 10px;
             width: 95%;
             height: 600px;
             background-color: #eeeeee;
         }
 
-        #table_footer {
-            bottom: 0;
-            left: 0;
-            display: inline-block;
-            height: 60px;
+        .pulse_table{
+            margin-left: 2.5%;
+            margin-right: 2.5%;
+            max-width: 95%;
+            width: 95%;
+            table-layout: fixed;
+            background-color: #eeeeee;
+            overflow-x: auto;
+            position: absolute;
+        }
+        
+        .pulse_table thead, .pulse_table tbody {
+            display: block;
             width: 100%;
-            background-color: linen;
         }
 
-        #scrollable{
-            overflow-y: scroll;
-            height: 100%;
+        .pulse_table td{
+            white-space: nowrap;
         }
+
+        .pulse_table thead {
+            overflow: hidden;
+        }
+
+        .pulse_table tbody{
+            overflow-y: auto;
+            height: 600px;
+        }
+
+        /*.pulse_table{
+            margin-left: 2.5%;
+            margin-right: 2.5%;
+            width: 95%;
+            position: relative;
+        }
+
+        .pulse_table thead {
+            position: absolute;
+        }
+
+        .pulse_table tbody{
+            overflow: auto;
+            margin-top: 51px;
+            height: 600px;
+        }*/
+
+
 
         #add_column_button{
             float: left;
@@ -82,39 +115,86 @@
             float: right;
             margin-right: 50px;
         }
+
+        #file_input{
+            float: left;
+            margin-left: 2.5%;
+        }
+
+        #table_div{
+            position:relative;
+            height: 700px;
+        }
+
+        #overlay_table{
+            margin-left: 2.5%;
+            position:relative;
+            width: 37px;
+            background-color: #cccccc;
+            height: 600px;
+        }
+
+        #overlay_table td{
+            height: 51px;
+        }
+
+        #overlay_table tbody{
+            overflow: auto;
+            height: 600px;
+        }
+
+        #menu::after{
+            content: "";
+            display: table;
+            clear: both;
+        }
     </style>
 
 </head>
 <body>
 <div style="width: 100%; text-align: center;">
     <p style="text-align:center;">Pulse Table</p>
-    <div style="display: inline-block;">
-        <input type="file" id="input" onchange="handleFiles(this.files)">
-    </div>
 </div>
 <div style="text-align: center;" >
-    <div id="pulse_table_div">
-        <div id="scrollable">
-            <table id="pulse_table" class="table table-hover table-bordered centered"></table>
+    <div id="menu">
+        <div id="add_column_button" style="float: right; margin-right: 2.5%; margin-left: 0;">
+            <button class="btn btn-default btn-lg" type="button"
+                    data-toggle="modal" data-target="#columnModal"
+                    onclick="updateModalLocation(this)" data-location="pulse_table">
+                Add Column
+            </button>
         </div>
-        <div id="table_footer">
-            <div id="add_column_button">
-                <b>Add Column</b>
-                <button class="btn-default btn-xs" type="button"
-                        data-toggle="modal" data-target="#columnModal"
-                        onclick="updateModalLocation(this)" data-location="pulse_table">
-                    <span class="glyphicon glyphicon-plus" aria-label="add column"></span>
-                </button>
-            </div>
-            <div id="add_row_button">
-                <b>Add Row</b>
-                <button class="btn-default btn-xs" type="button"
-                        data-toggle="modal" data-target="#rowModal"
-                        onclick="updateModalLocation(this)" data-location="pulse_table">
-                    <span class="glyphicon glyphicon-plus" aria-label="add row"></span>
-                </button>
-            </div>
+
+        <div id="add_row_button" class="btn-group" style="float: right; margin: 0;">
+
+            <button class="btn btn-default btn-lg" type="button"
+                    onclick="updateModalLocation(this); updateSelectionNumbers(); addRow(true, 0)" data-location="pulse_table">
+                Add Row
+            </button>
+
+            <button class="btn btn-default btn-lg dropdown-toggle" type="button"
+                    data-toggle="dropdown" aria-haspopup="true"
+                    onclick="updateModalLocation(this); updateSelectionNumbers();" data-location="pulse_table">
+                <span class="caret"></span>
+                <span class="sr-only">Toggle Dropdown</span>
+            </button>
+
+            <ul class="dropdown-menu" id="row_dropdown" style="height:1000%; overflow-y: scroll;">
+            </ul>
         </div>
+
+        <label id="file_input" class="btn btn-default btn-lg btn-file">
+            Select Protocol File
+            <input type="file" id="input" style="display:none;" onchange="handleFiles(this.files)">
+        </label>
+
+    </div>
+    <div id="table_div">
+        <table class="table table-bordered" style="width: 37px; position: absolute; margin-left: 2.5%; z-index: 1000; background-color: #cccccc"><tr><td style="height: 51px;"><b>#</b></td></tr></table>
+
+        <table id="pulse_table" class="table table-hover table-bordered pulse_table"></table>
+        <div style="height: 654px; overflow: hidden; border:
+         1px; " id="overlay_table_div"><table id="overlay_table" class="table table-bordered"></table></div>
     </div>
     <div id ="fixed_table_div" class="centered_table_div">
         <table id="fixed_table" class="table"></table>
@@ -125,6 +205,7 @@
     </div>
     </div>
 </div>
+
 
 
 <!-- Modal -->
@@ -142,7 +223,7 @@
                 <label><input type="checkbox" id="col_array"> Nested Array</label>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="addColumn()">Update Protocol</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="addColumn()">Add Column</button>
             </div>
         </div>
 
@@ -159,10 +240,10 @@
                 <h4 class="modal-title">New Row</h4>
             </div>
             <div class="modal-body">
-                <input id="row_name" data-location="N/A" placeholder="Enter row position" class="form-control col-lg" type="text"/>
+                <input class="form-control" id="row_select">
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="addRow()">Update Protocol</button>
+                <button type="button" class="btn btn-default" data-dismiss="modal" onclick="addFixedRow()">Add Row</button>
             </div>
         </div>
 
@@ -176,5 +257,6 @@
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="js/bootstrap.min.js"></script>
 <script src="protocol_parse.js"></script>
+<script src="jquery.fixedheadertable.min.js"></script>;
 </body>
 </html>
