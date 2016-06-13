@@ -368,8 +368,10 @@ var deleteColumn = function(element){
 
     var table = document.getElementById(element.id);
     var rowCount = table.rows.length;
-    for(var i = 0; i < rowCount - 2; i++){
+    console.log(rowCount);
+    for(var i = 0; i < rowCount; i++){
         table.rows[i].deleteCell(colNum);
+        console.log("deleted");
     }
 
     updateColumnIndices(table);
