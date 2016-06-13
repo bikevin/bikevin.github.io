@@ -88,7 +88,7 @@ var populatePulseTable = function(protocol, pulseInfo){
                 + id
                 +"' value='"
                 + pulseInfo["pulseVars"][i - 1]
-                +"' onkeyup='updateRowIndices(); widthAdjust(this);emptyError(this);' style='float: left;'></b>"
+                +"' onkeyup='updateRowIndices();emptyError(this);' style='float: left;'></b>"
                 +"<span class='glyphicon glyphicon-unchecked'></span>"
                 +"<a id='"
                 +String(i)
@@ -101,7 +101,7 @@ var populatePulseTable = function(protocol, pulseInfo){
                 + id
                 +"' value='"
                 + pulseInfo["pulseVars"][i - 1]
-                +"' onkeyup='updateRowIndices(); widthAdjust(this);emptyError(this);' style='float: left;'></b><a id='"
+                +"' onkeyup='updateRowIndices();emptyError(this);' style='float: left;'></b><a id='"
                 +String(i)
                 +"' class='close' onclick='deleteColumn(this)' style='float:right; margin-top: 7px;;'>&times;</a></div>";
 
@@ -295,6 +295,14 @@ var printValues = function(){
             if(element.length != 0){
                 temp.push(element[0].value);
                 temp.push(element[0].getAttribute("id"));
+                if(temp[1].split("~~#")[0].localeCompare("") == 0){
+                    alert("Empty column name in column " + j);
+                    return;
+                }
+                if(temp[0].localeCompare("") == 0){
+                    alert("Empty input in column " + temp[1].split("~~#")[0] + " at row " + i);
+                    return;
+                }
                 newJsonParts.push(temp);
             }
         }
@@ -304,7 +312,12 @@ var printValues = function(){
     for(i = 0; i < table.rows.length - 1; i++) {
         temp = {};
         var data = table.rows[i].cells[0].getElementsByTagName("TEXTAREA")[0];
-        temp[table.rows[i].cells[0].getElementsByTagName("INPUT")[0].value] = JSON.parse(data.value);
+        try {
+            temp[table.rows[i].cells[0].getElementsByTagName("INPUT")[0].value] = JSON.parse(data.value);
+        } catch(e){
+            var error = "Error in " + table.rows[i].cells[0].getElementsByTagName("INPUT")[0].value + " input";
+            alert(error);
+        }
         newJsonParts.push(temp);
     }
 
@@ -460,7 +473,6 @@ var addColumn = function(){
     var rowLength = table.rows.length;
 
     var colLength = table.rows[0].cells.length;
-    console.log(table.rows.length);
     if(colLength == 0){
         colLength = 1;
     }
@@ -486,7 +498,7 @@ var addColumn = function(){
                         + colName + "~~#" + 0 + "~~#Array"
                         + "' value='"
                         + colName
-                        + "' onkeyup='updateRowIndices(); widthAdjust(this);emptyError(this);' style='float: left;'></b>"
+                        + "' onkeyup='updateRowIndices();emptyError(this);' style='float: left;'></b>"
                         +"<span class='glyphicon glyphicon-unchecked'></span><a id='"
                         + String(i)
                         + "' class='close' onclick='deleteColumn(this)' style='float:right; margin-top: 7px;'>&times;</a></div>"
@@ -495,7 +507,7 @@ var addColumn = function(){
                         + colName + "~~#" + 0
                         + "' value='"
                         + colName
-                        + "' onkeyup='updateRowIndices(); widthAdjust(this);emptyError(this);' style='float: left;'></b><a id='"
+                        + "' onkeyup='updateRowIndices();emptyError(this);' style='float: left;'></b><a id='"
                         + String(i)
                         + "' class='close' onclick='deleteColumn(this)' style='float:right;'>&times;</a></div>"
                 }
