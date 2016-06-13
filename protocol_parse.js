@@ -27,15 +27,18 @@ $.getJSON("photosynthesis.json", function(data){
 });
 
 var protocolInfo = function(protocol){
-    if(!protocol.hasOwnProperty("pulses")){
-        return -1;
-    }
 
-    var pulseNum = protocol["pulses"].length;
+
     var maxFixedNum = 0;
 
     var pulseVars = [];
     var fixedVars = [];
+
+    if(!protocol.hasOwnProperty("pulses")){
+        var pulseNum = 0;
+    } else {
+        pulseNum = protocol["pulses"].length;
+    }
 
     Object.keys(protocol).forEach(function(d){
         if(protocol[d].length == pulseNum && d.localeCompare("environmental") != 0){
@@ -56,6 +59,10 @@ var populatePulseTable = function(protocol, pulseInfo){
 
     //clear the table first
     pulseTable.innerHTML ="";
+
+    if(pulseInfo["pulseVars"] == null){
+        return;
+    }
 
     var headerTable = document.getElementById("overlay_table");
     headerTable.innerHTML = "";
@@ -103,7 +110,7 @@ var populatePulseTable = function(protocol, pulseInfo){
             +"&times;"
             +"</a>";
         cell.style.backgroundColor = "#cccccc";
-        cell.style.width = "37px"
+        cell.style.width = "37px";
 
         for (var j = 1; j < pulseInfo["pulseVars"].length + 1; j++) {
             cell = row.insertCell(j);
@@ -127,7 +134,7 @@ var populatePulseTable = function(protocol, pulseInfo){
         cell.innerHTML = "<b>" + String(i + 1) + " </b>";
         cell.innerHTML += "<a id='"
             +String(i + 1)
-            +"' class='close' onclick='deleteRow(this, true)'>"
+            +"' class='close' onclick='deleteRow(this, false)'>"
             +"&times;"
             +"</a>";
     }
@@ -143,31 +150,10 @@ var populatePulseTable = function(protocol, pulseInfo){
                 .scrollLeft())
         }
 
-        console.log(pulse_table.find("thead")
-            .scrollLeft());
-
-        console.log(pulse_table.find("thead")
-            .scrollLeft());
-
         $("#overlay_table_div").scrollTop(pulse_table.find("tbody").scrollTop())
     });
 
-    /*row = pulseTable.rows[0];
-    id = row.cells.length;
-    cell = row.insertCell(id);
-    cell.innerHTML = '<b>Add Column </b><button class="btn-default btn-xs" id="' +
-        String(id) +
-        '" type="button" data-toggle="modal" data-target="#columnModal" onclick="updateModalLocation(this)">'+
-        '<span class="glyphicon glyphicon-plus" aria-label="add column"></span>' +
-        '</button>';
 
-    row = pulseTable.insertRow(pulseTable.rows.length);
-    cell = row.insertCell(0);
-    cell.innerHTML = '<b>Add Row </b><button class="btn-default btn-xs" id="' +
-        String(id) +
-        '" type="button" data-toggle="modal" data-target="#rowModal"' +
-        'onclick="updateModalLocation(this);"><span class="glyphicon glyphicon-plus" aria-label="add row"></span>' +
-        '</button>';*/
 };
 
 var populateFixedTable = function(protocol, fixedInfo){
@@ -389,15 +375,22 @@ var deleteRow = function(element, fixed){
         element = element.parentNode;
     }
 
-    var table = document.getElementById(element.id);
+    if(element.id.localeCompare("overlay_table") == 0){
+        var table = document.getElementById("pulse_table");
+    } else {
+        table = document.getElementById(element.id);
+    }
+
     table.deleteRow(parseInt(rowNum));
+    document.getElementById("overlay_table").deleteRow(parseInt(rowNum));
 
     if(!fixed) {
         updateRowIndices(table);
     } else {
-        var rows = table.rows;
+        var rows = document.getElementById("overlay_table").rows;
         var length = rows.length;
-        for(var i = 0; i < length - 1; i++){
+        for(var i = 1; i < length - 1; i++){
+            console.log(rows[i].cells[0].childNodes[1].id);
             rows[i].cells[0].childNodes[1].id = i;
         }
     }
@@ -407,10 +400,15 @@ var updateRowIndices = function(){
     var table = document.getElementById("pulse_table");
     var rows = table.rows;
     var length = rows.length;
-    var cellNum = rows[1].cells.length;
+    if(rows[1] == null){
+        var cellNum = 0;
+    } else {
+        cellNum = rows[1].cells.length;
+    }
+    var headerRows = document.getElementById("overlay_table").rows;
     for(var i = 1; i < length; i++){
-        rows[i].cells[0].getElementsByTagName("B")[0].textContent = String(i);
-        rows[i].cells[0].getElementsByTagName("A")[0].id = i;
+        headerRows[i].cells[0].getElementsByTagName("B")[0].textContent = String(i);
+        headerRows[i].cells[0].getElementsByTagName("A")[0].id = i;
         for(var j = 1; j < cellNum - 1; j++){
             var idStr = rows[i].cells[j].childNodes[0].id;
             idStr = idStr.split("~~#");
@@ -443,7 +441,15 @@ var addColumn = function(){
     var nested = document.getElementById("col_array").checked;
     var table = document.getElementById(input.getAttribute("data-location"));
     var rowLength = table.rows.length;
+
+    if(rowLength == 1){
+        table.insertRow(1);
+        rowLength = 2;
+    }
     var colLength = table.rows[1].cells.length;
+    if(colLength == 0){
+        colLength = 1;
+    }
 
     var string3;
 
@@ -452,6 +458,8 @@ var addColumn = function(){
     } else {
         string3 = "EMPTY";
     }
+
+
 
     if(colName.localeCompare("") != 0) {
         for (var i = 0; i < rowLength - 1; i++) {
@@ -489,7 +497,11 @@ var addRow = function(end, position){
     //var input = document.getElementById("row_name");
     var input = document.getElementById("row_select");
     var table = document.getElementById(input.getAttribute("data-location"));
-    var cellNum = table.rows[1].cells.length;
+    if(table.rows[1] == null){
+        var cellNum = 0;
+    } else {
+        cellNum = table.rows[1].cells.length;
+    }
     var numRows = table.rows.length;
     
     if(!end){
@@ -507,6 +519,7 @@ var addRow = function(end, position){
                 colType = colType.split(" ")[0];
                 var nested = (table.rows[1].cells[i].id.split("~~#").length == 3);
                 if (i == 0) {
+                    cell = document.getElementById("overlay_table").insertRow(parseInt(rowLoc)).insertCell(i);
                     cell.innerHTML = "<b>" + String(rowLoc) + " </b>";
                     cell.innerHTML += "<a id='"
                         +String(rowLoc)
@@ -597,22 +610,21 @@ var widthAdjust = function(element){
     element.style.width = "150px";
 };
 
-var updateSelectionNumbers = function(){
-    var table = document.getElementById("pulse_table");
-    var select = document.getElementById("row_select");
+var updateSelectionNumbers = function(element){
+    var table = document.getElementById("overlay_table");
     var list = document.getElementById("row_dropdown");
+
 
     if(list.hasChildNodes()){
         var children = list.childNodes;
-        for(var i = 0; i < children.length; i++){
+        for(var i = children.length - 1; i >-1; i--){
             list.removeChild(children[i]);
         }
     }
+
+
     for(i = 1; i < table.rows.length + 1; i++){
-        var option = document.createElement("option");
-        option.innerHTML = i;
-        select.appendChild(option);
-        option = document.createElement("li");
+        var option = document.createElement("li");
         option.setAttribute("id", String(i));
         option.innerHTML = "<button class='btn btn-default form-control-borderless' onclick='addRow(false,"
             + String(i)

@@ -168,15 +168,15 @@
         <div id="add_row_button" class="btn-group" style="float: right; margin: 0;">
 
             <button class="btn btn-default btn-lg" type="button"
-                    onclick="updateModalLocation(this); updateSelectionNumbers(); addRow(true, 0)" data-location="pulse_table">
+                    onclick="updateModalLocation(this); updateSelectionNumbers(this); addRow(true, 0)" data-location="pulse_table">
                 Add Row
             </button>
 
             <button class="btn btn-default btn-lg dropdown-toggle" type="button"
                     data-toggle="dropdown" aria-haspopup="true"
-                    onclick="updateModalLocation(this); updateSelectionNumbers();" data-location="pulse_table">
+                    onclick="updateModalLocation(this); updateSelectionNumbers(this);" data-location="pulse_table">
                 <span class="caret"></span>
-                <span class="sr-only">Toggle Dropdown</span>
+                    <span class="sr-only">Toggle Dropdown</span>
             </button>
 
             <ul class="dropdown-menu" id="row_dropdown" style="height:1000%; overflow-y: scroll;">
@@ -190,11 +190,11 @@
 
     </div>
     <div id="table_div">
-        <table class="table table-bordered" style="width: 37px; position: absolute; margin-left: 2.5%; z-index: 1000; background-color: #cccccc"><tr><td style="height: 51px;"><b>#</b></td></tr></table>
+        <table class="table table-bordered" style="width: 38px; position: absolute; margin-left: 2.5%; z-index: 1000; background-color: #cccccc"><tr><td style="height: 51px;"><b>#</b></td></tr></table>
 
         <table id="pulse_table" class="table table-hover table-bordered pulse_table"></table>
         <div style="height: 654px; overflow: hidden; border:
-         1px; " id="overlay_table_div"><table id="overlay_table" class="table table-bordered"></table></div>
+         1px; " id="overlay_table_div"><table id="overlay_table" class="table table-bordered" style="width:38px;"></table></div>
     </div>
     <div id ="fixed_table_div" class="centered_table_div">
         <table id="fixed_table" class="table"></table>
