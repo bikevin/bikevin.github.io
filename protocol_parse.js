@@ -77,27 +77,38 @@ var populatePulseTable = function(protocol, pulseInfo){
     //populate headers
     cell = row.insertCell(0);
     cell.innerHTML = "<b>#</b>";
-    cell.style.backgroundColor = "#cccccc";
     cell.style.minWidth = "50px";
     for(var i = 1; i < pulseInfo["pulseVars"].length + 1; i++){
         cell = row.insertCell(i);
 
         if(Array.isArray(protocol[pulseInfo["pulseVars"][i - 1]][i])){
             id = pulseInfo["pulseVars"][i - 1] + "~~#" + 0 + "~~#Array";
+
+            cell.innerHTML = "<div style='width:200px'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
+                + id
+                +"' value='"
+                + pulseInfo["pulseVars"][i - 1]
+                +"' onkeyup='updateRowIndices(); widthAdjust(this);emptyError(this);' style='float: left;'></b>"
+                +"<span class='glyphicon glyphicon-unchecked'></span>"
+                +"<a id='"
+                +String(i)
+                +"' class='close' onclick='deleteColumn(this)' style='float:right; margin-top: 7px;;'>&times;</a></div>";
+
         } else {
             id = pulseInfo["pulseVars"][i - 1] + "~~#" + 0;
+
+            cell.innerHTML = "<div style='width:200px'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
+                + id
+                +"' value='"
+                + pulseInfo["pulseVars"][i - 1]
+                +"' onkeyup='updateRowIndices(); widthAdjust(this);emptyError(this);' style='float: left;'></b><a id='"
+                +String(i)
+                +"' class='close' onclick='deleteColumn(this)' style='float:right; margin-top: 7px;;'>&times;</a></div>";
+
         }
 
-        cell.innerHTML = "<div style='width:150%'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
-            + id
-            +"' value='"
-            + pulseInfo["pulseVars"][i - 1]
-            +"' onkeyup='updateRowIndices(); widthAdjust(this);' style='float: left;'></b><a id='"
-            +String(i)
-            +"' class='close' onclick='deleteColumn(this)' style='float:left; margin-left: -13px; margin-top: 7px;'>&times;</a></div>";
 
-        widthAdjust(cell.getElementsByTagName("INPUT")[0]);
-        cell.style.backgroundColor ="#cccccc";
+        cell.getElementsByTagName("INPUT")[0].style.width="150px";
 
     }
 
@@ -126,7 +137,7 @@ var populatePulseTable = function(protocol, pulseInfo){
             } else {
                 id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i + 1);
             }
-            cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this)' class='form-control form-control-borderless col-lg' id='"
+            cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this);emptyError(this);' class='form-control form-control-borderless col-lg' id='"
                 + id
                 + "' value='"
                 + data
@@ -151,9 +162,9 @@ var populatePulseTable = function(protocol, pulseInfo){
         pulse_table.find("thead")
             .scrollLeft(pulse_table.find("tbody").scrollLeft());
 
-        if(pulse_table.find("thead").scrollLeft < pulse_table.find("tbody").scrollLeft()){
+        if(pulse_table.find("thead").scrollLeft() < pulse_table.find("tbody").scrollLeft()){
             pulse_table.find("tbody").scrollLeft(pulse_table.find("thead")
-                .scrollLeft())
+                .scrollLeft());
         }
 
         $("#overlay_table_div").scrollTop(pulse_table.find("tbody").scrollTop())
@@ -173,7 +184,7 @@ var populateFixedTable = function(protocol, fixedInfo){
         var cell = row.insertCell(0);
 
         cell.innerHTML ="<b><input type='text' class='form-control form-control-borderless col-lg' "
-        + "style='display: inline-block; float:left;' onkeyup='widthAdjust(this)' value='"
+        + "style='display: inline-block; float:left;' onkeyup='widthAdjust(this);emptyError(this);' value='"
         + fixedInfo["fixedVars"][i]
         + "' id='"
         + fixedInfo["fixedVars"][i] + String(i)
@@ -186,7 +197,7 @@ var populateFixedTable = function(protocol, fixedInfo){
 
         cell.innerHTML += "<textarea class='form-control form-control-borderless col-lg-1' id='"
             + id
-            + "' onkeyup='heightAdjust(this);' style='height: auto;' >"
+            + "' onkeyup='heightAdjust(this);emptyError(this);' style='height: auto;' >"
             + JSON.stringify(field)
             +"</textarea>";
 
@@ -368,10 +379,8 @@ var deleteColumn = function(element){
 
     var table = document.getElementById(element.id);
     var rowCount = table.rows.length;
-    console.log(rowCount);
     for(var i = 0; i < rowCount; i++){
         table.rows[i].deleteCell(colNum);
-        console.log("deleted");
     }
 
     updateColumnIndices(table);
@@ -471,15 +480,29 @@ var addColumn = function(){
             var row = table.rows[i];
             var cell = row.insertCell(colLength);
             if (i == 0) {
-                cell.innerHTML = "<div style='width:150%'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
-                    + String(i) + colName
-                    +"' value='"
-                    + colName
-                    +"' onkeyup='updateRowIndices(); widthAdjust(this);' style='float: left;'></b><a id='"
-                    +String(i)
-                    +"' class='close' onclick='deleteColumn(this)' style='float:left; margin-left: -13px; margin-top: 7px;'>&times;</a></div>";
 
-                widthAdjust(cell.getElementsByTagName("INPUT")[0]);
+                if(nested) {
+                    cell.innerHTML = "<div style='width:200px'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
+                        + colName + "~~#" + 0 + "~~#Array"
+                        + "' value='"
+                        + colName
+                        + "' onkeyup='updateRowIndices(); widthAdjust(this);emptyError(this);' style='float: left;'></b>"
+                        +"<span class='glyphicon glyphicon-unchecked'></span><a id='"
+                        + String(i)
+                        + "' class='close' onclick='deleteColumn(this)' style='float:right; margin-top: 7px;'>&times;</a></div>"
+                } else {
+                    cell.innerHTML = "<div style='width:200px'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
+                        + colName + "~~#" + 0
+                        + "' value='"
+                        + colName
+                        + "' onkeyup='updateRowIndices(); widthAdjust(this);emptyError(this);' style='float: left;'></b><a id='"
+                        + String(i)
+                        + "' class='close' onclick='deleteColumn(this)' style='float:right;'>&times;</a></div>"
+                }
+
+
+                cell.getElementsByTagName("INPUT")[0].style.width = "150px";
+                emptyError(cell.getElementsByTagName("INPUT")[0]);
                 cell.style.backgroundColor = "#cccccc";
             } else {
                 if (nested) {
@@ -487,10 +510,11 @@ var addColumn = function(){
                 } else {
                     id = colName + "~~#" + String(i);
                 }
-                cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this)' class='form-control form-control-borderless col-lg' id='"
+                cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this);emptyError(this);' class='form-control form-control-borderless col-lg' id='"
                     + id
                     + "' value=''/>";
                 widthAdjust(cell.getElementsByTagName("INPUT")[0]);
+                emptyError(cell.getElementsByTagName("INPUT")[0]);
             }
         }
     }
@@ -539,10 +563,11 @@ var addRow = function(end, position){
                     } else {
                         id = colType + "~~#" + rowLoc;
                     }
-                    cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this)' class='form-control form-control-borderless col-lg' id='"
+                    cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this);emptyError(this);' class='form-control form-control-borderless col-lg' id='"
                         + id
                         + "' value=''/>";
                     widthAdjust(cell.getElementsByTagName("INPUT")[0]);
+                    emptyError(cell.getElementsByTagName("INPUT")[0]);
                 }
 
             }
@@ -572,7 +597,7 @@ var addFixedRow = function(){
     var row = table.insertRow(rowNum - 1);
     var cell = row.insertCell(0);
     cell.innerHTML = "<b><input type='text' class='form-control form-control-borderless col-lg' "
-        + "style='display:inline-block;float:left;' onkeyup='widthAdjust(this)' value='"
+        + "style='display:inline-block;float:left;' onkeyup='widthAdjust(this);emptyError(this);' value='"
         + name
         + "' id='"
         + name + String(rowNum - 1)
@@ -582,11 +607,12 @@ var addFixedRow = function(){
 
     cell.innerHTML += "<textarea class='form-control form-control-borderless col-lg-1' id='"
         + name
-        + "' onkeyup='heightAdjust(this);' style='height: auto;' ></textarea>";
+        + "' onkeyup='heightAdjust(this);emptyError(this);' style='height: auto;' ></textarea>";
 
     var element = document.getElementById(name);
     heightAdjust(element);
     widthAdjust(document.getElementById(name + String(rowNum - 1)));
+    emptyError(element);
 };
 
 var updateModalLocation = function(element){
@@ -615,7 +641,7 @@ var widthAdjust = function(element){
     if(element.parentNode.tagName.localeCompare("TD") == 0){
         element.style.minWidth = table.rows[0].cells[element.parentNode.cellIndex].getElementsByTagName("INPUT")[0].style.width;
     }*/
-    element.style.width = "150px";
+    element.style.width = "200px";
 };
 
 var updateSelectionNumbers = function(element){
@@ -650,6 +676,20 @@ var processToStrings = function(d){
    }
 
     return arr;
+};
+
+var emptyError = function(inputElement){
+    var cell = inputElement;
+    while(cell.nodeName.localeCompare("TD") != 0){
+        cell = cell.parentNode;
+    }
+    cell.className =
+        cell.className.replace
+        ( /(?:^|\s)danger(?!\S)/g , '' );
+
+    if(inputElement.value.localeCompare("") == 0){
+        cell.className += "danger";
+    }
 };
 
 
