@@ -78,12 +78,18 @@ var populatePulseTable = function(protocol, pulseInfo){
     cell = row.insertCell(0);
     cell.innerHTML = "<b>#</b>";
     cell.style.backgroundColor = "#cccccc";
-    cell.style.width = "37px";
-    cell.style.minWidth = "37px";
+    cell.style.minWidth = "50px";
     for(var i = 1; i < pulseInfo["pulseVars"].length + 1; i++){
         cell = row.insertCell(i);
+
+        if(Array.isArray(protocol[pulseInfo["pulseVars"][i - 1]][i])){
+            id = pulseInfo["pulseVars"][i - 1] + "~~#" + 0 + "~~#Array";
+        } else {
+            id = pulseInfo["pulseVars"][i - 1] + "~~#" + 0;
+        }
+
         cell.innerHTML = "<div style='width:150%'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
-            + String(i) + pulseInfo["pulseVars"][i - 1]
+            + id
             +"' value='"
             + pulseInfo["pulseVars"][i - 1]
             +"' onkeyup='updateRowIndices(); widthAdjust(this);' style='float: left;'></b><a id='"
@@ -110,15 +116,15 @@ var populatePulseTable = function(protocol, pulseInfo){
             +"&times;"
             +"</a>";
         cell.style.backgroundColor = "#cccccc";
-        cell.style.width = "37px";
+        cell.style.minWidth = "50px";
 
         for (var j = 1; j < pulseInfo["pulseVars"].length + 1; j++) {
             cell = row.insertCell(j);
             var data = protocol[pulseInfo["pulseVars"][j - 1]][i];
             if(Array.isArray(data)){
-                var id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i) + "~~#" + "Array";
+                var id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i + 1) + "~~#" + "Array";
             } else {
-                id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i);
+                id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i + 1);
             }
             cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this)' class='form-control form-control-borderless col-lg' id='"
                 + id
@@ -412,7 +418,7 @@ var updateRowIndices = function(){
         for(var j = 1; j < cellNum - 1; j++){
             var idStr = rows[i].cells[j].childNodes[0].id;
             idStr = idStr.split("~~#");
-            idStr[0] = rows[0].cells[j].childNodes[0].childNodes[0].value;
+            idStr[0] = rows[0].cells[j].getElementsByTagName("INPUT")[0].value;
             parseInt(idStr[1]);
             idStr[1] = i;
             if(idStr.length == 2){
@@ -442,11 +448,8 @@ var addColumn = function(){
     var table = document.getElementById(input.getAttribute("data-location"));
     var rowLength = table.rows.length;
 
-    if(rowLength == 1){
-        table.insertRow(1);
-        rowLength = 2;
-    }
-    var colLength = table.rows[1].cells.length;
+    var colLength = table.rows[0].cells.length;
+    console.log(table.rows.length);
     if(colLength == 0){
         colLength = 1;
     }
@@ -462,7 +465,7 @@ var addColumn = function(){
 
 
     if(colName.localeCompare("") != 0) {
-        for (var i = 0; i < rowLength - 1; i++) {
+        for (var i = 0; i < rowLength ; i++) {
             var row = table.rows[i];
             var cell = row.insertCell(colLength);
             if (i == 0) {
@@ -497,12 +500,9 @@ var addRow = function(end, position){
     //var input = document.getElementById("row_name");
     var input = document.getElementById("row_select");
     var table = document.getElementById(input.getAttribute("data-location"));
-    if(table.rows[1] == null){
-        var cellNum = 0;
-    } else {
-        cellNum = table.rows[1].cells.length;
-    }
+    var cellNum = table.rows[0].cells.length;
     var numRows = table.rows.length;
+    var body = table.getElementsByTagName("TBODY")[0];
     
     if(!end){
         var rowLoc = position;
@@ -512,12 +512,9 @@ var addRow = function(end, position){
 
     if(table.id.localeCompare("pulse_table") == 0) {
         if (!isNaN(parseInt(rowLoc)) && (parseInt(rowLoc) > -1 && parseInt(rowLoc) < numRows + 1)) {
-            var row = table.insertRow(parseInt(rowLoc));
+            var row = body.insertRow(parseInt(rowLoc) - 1);
             for (var i = 0; i < cellNum; i++) {
                 var cell = row.insertCell(i);
-                var colType = table.rows[0].cells[i].getElementsByTagName("B")[0].textContent;
-                colType = colType.split(" ")[0];
-                var nested = (table.rows[1].cells[i].id.split("~~#").length == 3);
                 if (i == 0) {
                     cell = document.getElementById("overlay_table").insertRow(parseInt(rowLoc)).insertCell(i);
                     cell.innerHTML = "<b>" + String(rowLoc) + " </b>";
@@ -527,16 +524,25 @@ var addRow = function(end, position){
                         +"&times;"
                         +"</a>";
                     cell.style.backgroundColor = "#cccccc";
+                    var temp = cell.innerHTML;
+                    cell = row.cells[0];
+                    cell.innerHTML = temp;
+                    cell.style.minWidth = "50px";
                 } else {
+                    var colType = table.rows[0].cells[i].getElementsByTagName("INPUT")[0].value;
+                    var nested = (table.rows[0].cells[i].getElementsByTagName("INPUT")[0].id.split("~~#").length == 3);
+
                     if (nested) {
-                        var id = colType + "~~#" + i + "~~#" + table.rows[1].cells[i].id.split("~~#")[2];
+                        var id = colType + "~~#" + rowLoc + "~~#" + table.rows[1].cells[i].getElementsByTagName("INPUT")[0].id.split("~~#")[2];
                     } else {
-                        id = colType + "~~#" + i;
+                        id = colType + "~~#" + rowLoc;
                     }
                     cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this)' class='form-control form-control-borderless col-lg' id='"
                         + id
                         + "' value=''/>";
+                    widthAdjust(cell.getElementsByTagName("INPUT")[0]);
                 }
+
             }
         }
 

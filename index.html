@@ -128,8 +128,9 @@
 
         #overlay_table{
             margin-left: 2.5%;
+            margin-top: 2px;
             position:relative;
-            width: 37px;
+            width: 51px;
             background-color: #cccccc;
             height: 600px;
         }
@@ -190,11 +191,11 @@
 
     </div>
     <div id="table_div">
-        <table class="table table-bordered" style="width: 38px; position: absolute; margin-left: 2.5%; z-index: 1000; background-color: #cccccc"><tr><td style="height: 51px;"><b>#</b></td></tr></table>
+        <table class="table table-bordered" style="width: 50px; position: absolute; margin-left: 2.5%; z-index: 1000; background-color: #cccccc"><tr><td style="height: 52px; min-width: 50px;"><b>#</b></td></tr></table>
 
         <table id="pulse_table" class="table table-hover table-bordered pulse_table"></table>
         <div style="height: 654px; overflow: hidden; border:
-         1px; " id="overlay_table_div"><table id="overlay_table" class="table table-bordered" style="width:38px;"></table></div>
+         1px; " id="overlay_table_div"><table id="overlay_table" class="table table-bordered"></table></div>
     </div>
     <div id ="fixed_table_div" class="centered_table_div">
         <table id="fixed_table" class="table"></table>
@@ -257,6 +258,5 @@
 <!-- Include all compiled plugins (below), or include individual files as needed -->
 <script src="js/bootstrap.min.js"></script>
 <script src="protocol_parse.js"></script>
-<script src="jquery.fixedheadertable.min.js"></script>;
 </body>
 </html>
