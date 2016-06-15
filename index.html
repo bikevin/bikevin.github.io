@@ -19,7 +19,8 @@
         }
 
         .centered_table_div {
-            display: inline-block;
+            display: inline-flex;
+            flex-direction: column;
             position: relative;
             top: 0;
             bottom: 0;
@@ -27,33 +28,27 @@
             right: 0;
             margin: auto;
             width: 95%;
-            max-height: 600px;
-            overflow-y: scroll;
-            background-color: #eeeeee;
             text-align: left;
+            height: 100%;
         }
 
-
-        #everything_else{
-            display: inline-block;
-            position: relative;
-            top: 0;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            margin: auto;
-            width: 95%;
-            max-height: 600px;
-            background-color: #eeeeee;
+        .center_modal{
             text-align: center;
         }
 
-        #pulse_table_div {
-            position: relative;
+        @media screen and (min-width: 768px){
+            .center_modal:before{
+                display: inline-block;
+                vertical-align: middle;
+                content: " ";
+                height: 100%;
+            }
+        }
+
+        .center_modal-dialog {
             display: inline-block;
-            width: 95%;
-            height: 600px;
-            background-color: #eeeeee;
+            text-align: left;
+            vertical-align: middle;
         }
 
         .pulse_table{
@@ -65,6 +60,9 @@
             background-color: #eeeeee;
             overflow-x: auto;
             position: absolute;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
         }
         
         .pulse_table thead, .pulse_table tbody {
@@ -79,52 +77,30 @@
         .pulse_table thead {
             overflow: hidden;
             background-color: #cccccc;
+            flex: 0 0 auto;
         }
 
         .pulse_table tbody{
             overflow-y: auto;
-            height: 600px;
+            flex: 1 1 auto;
         }
-
-        /*.pulse_table{
-            margin-left: 2.5%;
-            margin-right: 2.5%;
-            width: 95%;
-            position: relative;
-        }
-
-        .pulse_table thead {
-            position: absolute;
-        }
-
-        .pulse_table tbody{
-            overflow: auto;
-            margin-top: 51px;
-            height: 600px;
-        }*/
-
-
 
         #add_column_button{
-            float: left;
-            top: 0;
-            bottom: 0;
-            margin: auto;
+            float: right;
         }
 
         #add_row_button{
             float: right;
-            margin-right: 50px;
         }
 
         #file_input{
             float: left;
-            margin-left: 2.5%;
         }
 
         #table_div{
             position:relative;
-            height: 700px;
+            flex: 1 1 auto;
+            display: inline-flex;
         }
 
         #overlay_table{
@@ -133,7 +109,7 @@
             position:relative;
             width: 51px;
             background-color: #cccccc;
-            height: 600px;
+            height: 80%;
         }
 
         #overlay_table td{
@@ -142,7 +118,7 @@
 
         #overlay_table tbody{
             overflow: auto;
-            height: 600px;
+            height: 100%;
         }
 
         #menu::after{
@@ -150,61 +126,110 @@
             display: table;
             clear: both;
         }
+
+        #menu{
+            flex: 0 0 auto;
+            margin-left: 2.5%;
+            margin-right: 2.5%;
+        }
+
+        #overlay_table_div{
+            overflow: hidden;
+            border: 1px;
+            flex: 1 1 auto;
+            display: inline-flex;
+        }
+
+        #nav_buttons{
+            margin-left: 2.5%;
+            margin-right: 2.5%;
+        }
+
+        #fixed_table td{
+            border: 1px solid #ddd;
+        }
+
+        #fixed_add_button{
+            float: right;
+        }
+
+        .numerical_input{
+            display: flex;
+            flex-direction:row;
+            align-items: baseline;
+        }
+
+        .numerical_input p{
+            margin: 0;
+            width: 50%;
+            justify-content:center;
+        }
+
+        .numerical_input input{
+            width: 70%;
+        }
+
     </style>
 
 </head>
 <body>
 <div style="width: 100%; text-align: center;">
-    <p style="text-align:center;">Pulse Table</p>
+    <h2 style="text-align:center;">Photosynq Protocol Editor</h2>
 </div>
-<div style="text-align: center;" >
-    <div id="menu">
-        <div id="add_column_button" style="float: right; margin-right: 2.5%; margin-left: 0;">
-            <button class="btn btn-default btn-lg" type="button"
-                    data-toggle="modal" data-target="#columnModal"
-                    onclick="updateModalLocation(this)" data-location="pulse_table">
-                Add Column
-            </button>
+<div style="text-align: center; height: 80vh;" id="protocol_editor" >
+    <div id="protocol_container" style="height:100%">
+        <div id="pulses" style="height:100%; display: flex; flex-direction: column;">
+            <div id="menu">
+                <label id="file_input" class="btn btn-default btn-lg btn-file">
+                    Select Protocol File
+                    <input type="file" id="input" style="display:none;" onchange="handleFiles(this)">
+                </label>
+                <h4 align="center" style="z-index: -1; position: absolute; top: 70px; left: 0; right: 0; margin: auto;">PULSE TABLE</h4>
+                <div id="add_row_button" class="btn-group" style="float: right; margin: 0;">
+
+                    <button class="btn btn-default btn-lg" type="button"
+                            onclick="updateSelectionNumbers(this); addRow(true, 0)" data-location="pulse_table">
+                        Add Row
+                    </button>
+
+                    <button class="btn btn-default btn-lg dropdown-toggle" type="button"
+                            data-toggle="dropdown" aria-haspopup="true"
+                            onclick="updateSelectionNumbers(this);" data-location="pulse_table">
+                        <span class="caret"></span>
+                            <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+
+                    <ul class="dropdown-menu" id="row_dropdown" style="height:1000%; overflow-y: scroll;">
+                    </ul>
+                </div>
+                <div id="add_column_button" >
+                    <button class="btn btn-default btn-lg" type="button"
+                            data-toggle="modal" data-target="#columnModal" data-location="pulse_table">
+                        Add Column
+                    </button>
+                </div>
+
+            </div>
+            <div id="table_div">
+                <table class="table table-bordered" style="width: 50px; position: absolute; margin-left: 2.5%; z-index: 1000; background-color: #cccccc"><tr><td style="height: 52px; min-width: 50px;"><b>#</b></td></tr></table>
+
+                <table id="pulse_table" class="table table-hover table-bordered pulse_table"></table>
+                <div style="" id="overlay_table_div"><table id="overlay_table" class="table table-bordered"></table></div>
+            </div>
         </div>
-
-        <div id="add_row_button" class="btn-group" style="float: right; margin: 0;">
-
-            <button class="btn btn-default btn-lg" type="button"
-                    onclick="updateModalLocation(this); updateSelectionNumbers(this); addRow(true, 0)" data-location="pulse_table">
-                Add Row
-            </button>
-
-            <button class="btn btn-default btn-lg dropdown-toggle" type="button"
-                    data-toggle="dropdown" aria-haspopup="true"
-                    onclick="updateModalLocation(this); updateSelectionNumbers(this);" data-location="pulse_table">
-                <span class="caret"></span>
-                    <span class="sr-only">Toggle Dropdown</span>
-            </button>
-
-            <ul class="dropdown-menu" id="row_dropdown" style="height:1000%; overflow-y: scroll;">
-            </ul>
+        <div id ="fixed_vars" class="centered_table_div" style="display: none;">
+            <div id="fixed_menu">
+                <h4 align="center" style="z-index: -1; position: absolute; left: 0; right: 0; top: 15px; margin: auto;">FIXED VAR TABLE</h4>
+                <button class="btn btn-default btn-lg" type="button" data-toggle="modal" data-target="#rowModal" id="fixed_add_button">Add Fixed Variable</button>
+            </div>
+            <table id="fixed_table" class="table" style="display: inline-flex; flex: 1 1 auto; background-color:#eeeeee; overflow-y: auto; margin-bottom: 0;"></table>
         </div>
-
-        <label id="file_input" class="btn btn-default btn-lg btn-file">
-            Select Protocol File
-            <input type="file" id="input" style="display:none;" onchange="handleFiles(this.files)">
-        </label>
-
     </div>
-    <div id="table_div">
-        <table class="table table-bordered" style="width: 50px; position: absolute; margin-left: 2.5%; z-index: 1000; background-color: #cccccc"><tr><td style="height: 52px; min-width: 50px;"><b>#</b></td></tr></table>
-
-        <table id="pulse_table" class="table table-hover table-bordered pulse_table"></table>
-        <div style="height: 654px; overflow: hidden; border:
-         1px; " id="overlay_table_div"><table id="overlay_table" class="table table-bordered"></table></div>
-    </div>
-    <div id ="fixed_table_div" class="centered_table_div">
-        <table id="fixed_table" class="table"></table>
-    </div>
-    <div id="everything_else">
-        <button style="display: inline-block;" class="btn-default btn-lg" type="button" onclick="printValues()">Submit</button>
-    <div id="json_display">
-    </div>
+    <div id="nav_buttons">
+        <button id="previous" style="float:left; visibility:hidden" type="button" class="btn btn-default btn-lg" onclick="transitionPane(false, this)">Pulse Table</button>
+        <button style="visibility: hidden; display: inline-block;" class="btn btn-default btn-lg" type="button" onclick="printValues()"
+                id="get_data" data-toggle="modal" data-target="#outputModal">Submit</button>
+        <button id="next" style="float:right;" type="button" class="btn btn-default btn-lg" onclick="transitionPane(true, this)">Fixed Var Table</button>
     </div>
 </div>
 
@@ -252,6 +277,98 @@
     </div>
 </div>
 
+<div id="outputModal" class="modal fade" role="dialog">
+    <div class="modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">&times;</button>
+                <h4 class="modal-title">JSON Output</h4>
+            </div>
+            <div id="outputModalBody" class="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal" >Close</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="welcomeModal" class="modal fade center_modal" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog center_modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-body">
+                <h3 align="center" class="modal-title">Welcome to the Photosynq Protocol Editor!</h3>
+                <h4 align="center">To get started, make an empty protocol or upload one.</h4>
+                <div style="height: 50px; margin-top: 20px; margin-left: 5%; margin-right: 5%;">
+                    <button id="empty_protocol" style="float:left;" type="button" class="btn btn-default btn-lg"
+                    data-toggle="modal" data-target="#newCreateModal" data-dismiss="modal">Create New Protocol</button>
+                   <label id="upload_protocol" style="float:right" class="btn btn-default btn-lg btn-file">
+                        Upload Protocol
+                        <input type="file" id="start_file" style="display:none;" onchange="handleFiles(this)">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div id="newCreateModal" class="modal fade center_modal" role="dialog" data-backdrop="static" data-keyboard="false">
+    <div class="modal-dialog center_modal-dialog">
+
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header">
+                <h4 class="modal-title" align="left">New Protocol</h4>
+            </div>
+            <div class="modal-body">
+                <div class="numerical_input">
+                    <div style="width: 5%;"></div>
+                    <p>Pulse sets (between 0 and 99): </p>
+                    <div style="width: 5%;"></div>
+                    <label>
+                        <input min="0" max="99" id="pulse_sets" type="number" class="form-control col-lg" value="0">
+                    </label>
+                </div>
+                <div class="numerical_input">
+                    <div style="width: 5%;"></div>
+                    <p>Pulse vars (between 0 and 99): </p>
+                    <div style="width: 5%;"></div>
+                    <label>
+                        <input min="0" max="99" id="pulse_vars" type="number" class="form-control col-lg" value="0">
+                    </label>
+                </div>
+                <div class="numerical_input">
+                    <div style="width: 5%;"></div>
+                    <p>Nested pulse vars (between 0 and 99): </p>
+                    <div style="width: 5%;"></div>
+                    <label>
+                        <input min="0" max="99" id="nested_pulse_vars" type="number" class="form-control col-lg" value="0">
+                    </label></div>
+                <div class="numerical_input">
+                    <div style="width: 5%;"></div>
+                    <p>Fixed vars (between 0 and 99): </p>
+                    <div style="width: 5%;"></div>
+                    <label>
+                        <input min="0" max="99" id="fixed_vars_input" type="number" class="form-control col-lg" value="0">
+                    </label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button style="float: left;" class="btn btn-default btn-lg" data-toggle="modal" data-target="#welcomeModal" data-dismiss="modal">Back</button>
+                <button class="btn btn-default btn-lg"
+                        onclick="getFromNewProtocolModal()"
+                        data-dismiss="modal">Create</button>
+            </div>
+        </div>
+
+    </div>
+</div>
 
 
 <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->

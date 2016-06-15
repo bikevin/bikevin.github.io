@@ -5,8 +5,9 @@
 //stores the current protocol - be careful where you use it because it may not be initialized
 var currentProtocol;
 
-var handleFiles = function(){
-    var selectedFile = document.getElementById("input").files[0];
+var handleFiles = function(element){
+    $("#welcomeModal").modal("hide");
+    var selectedFile = element.files[0];
     var url = window.URL.createObjectURL(selectedFile);
 
     $.getJSON(url, function(data){
@@ -18,7 +19,7 @@ var handleFiles = function(){
     });
 };
 
-$.getJSON("photosynthesis.json", function(data){
+$.getJSON("blank.json", function(data){
    //data[0] is the actual protocol
     var protocol = protocolInfo(data[0]);
     currentProtocol = data[0];
@@ -26,9 +27,11 @@ $.getJSON("photosynthesis.json", function(data){
     populateFixedTable(data[0], protocol);
 });
 
+$(document).ready(function(){
+    $("#welcomeModal").modal("show");
+});
+
 var protocolInfo = function(protocol){
-
-
     var maxFixedNum = 0;
 
     var pulseVars = [];
@@ -80,9 +83,10 @@ var populatePulseTable = function(protocol, pulseInfo){
     cell.style.minWidth = "50px";
     for(var i = 1; i < pulseInfo["pulseVars"].length + 1; i++){
         cell = row.insertCell(i);
+        id = pulseInfo["pulseVars"][i - 1] + "~~#" + 0;
 
         if(Array.isArray(protocol[pulseInfo["pulseVars"][i - 1]][i])){
-            id = pulseInfo["pulseVars"][i - 1] + "~~#" + 0 + "~~#Array";
+            id += "~~#Array";
 
             cell.innerHTML = "<div style='width:200px'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
                 + id
@@ -95,8 +99,6 @@ var populatePulseTable = function(protocol, pulseInfo){
                 +"' class='close' onclick='deleteColumn(this)' style='float:right; margin-top: 7px;;'>&times;</a></div>";
 
         } else {
-            id = pulseInfo["pulseVars"][i - 1] + "~~#" + 0;
-
             cell.innerHTML = "<div style='width:200px'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
                 + id
                 +"' value='"
@@ -120,22 +122,20 @@ var populatePulseTable = function(protocol, pulseInfo){
     for(i = 0; i < pulseInfo["pulses"]; i++){
         row = body.insertRow(i);
         cell = row.insertCell(0);
-        cell.innerHTML = "<b>" + String(i + 1) + " </b>";
-        cell.innerHTML += "<a id='"
+        cell.innerHTML = "<b>" + String(i + 1) + " </b>"
+            + "<a id='"
             +String(i + 1)
             +"' class='close' onclick='deleteRow(this, true)'>"
             +"&times;"
             +"</a>";
-        cell.style.backgroundColor = "#cccccc";
         cell.style.minWidth = "50px";
 
         for (var j = 1; j < pulseInfo["pulseVars"].length + 1; j++) {
             cell = row.insertCell(j);
             var data = protocol[pulseInfo["pulseVars"][j - 1]][i];
-            if(Array.isArray(data)){
-                var id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i + 1) + "~~#" + "Array";
-            } else {
-                id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i + 1);
+            var id = String(pulseInfo["pulseVars"][j - 1]) + "~~#" + String(i + 1);
+            if(Array.isArray(data)) {
+                id += "~~#Array";
             }
             cell.innerHTML = "<input type='text' onkeyup='widthAdjust(this);emptyError(this);' class='form-control form-control-borderless col-lg' id='"
                 + id
@@ -148,8 +148,8 @@ var populatePulseTable = function(protocol, pulseInfo){
 
         row = overlayBody.insertRow(i);
         cell = row.insertCell(0);
-        cell.innerHTML = "<b>" + String(i + 1) + " </b>";
-        cell.innerHTML += "<a id='"
+        cell.innerHTML = "<b>" + String(i + 1) + " </b>"
+            +"<a id='"
             +String(i + 1)
             +"' class='close' onclick='deleteRow(this, false)'>"
             +"&times;"
@@ -197,22 +197,13 @@ var populateFixedTable = function(protocol, fixedInfo){
 
         cell.innerHTML += "<textarea class='form-control form-control-borderless col-lg-1' id='"
             + id
-            + "' onkeyup='heightAdjust(this);emptyError(this);' style='height: auto;' >"
+            + "' onkeyup='heightAdjust(this);emptyError(this);' style='height: auto; min-width: 90vw;' >"
             + JSON.stringify(field)
             +"</textarea>";
 
         heightAdjust(document.getElementById(id));
         widthAdjust(document.getElementById(fixedInfo["fixedVars"][i] + String(i)));
     }
-    row = fixedTable.insertRow(fixedTable.rows.length);
-    cell = row.insertCell(0);
-    cell.innerHTML = '<button class="btn-default btn-lg" id="' +
-        String(id) +
-        '" type="button" data-toggle="modal" data-target="#rowModal"' +
-        ' onclick="updateModalLocation(this);">Add Fixed Variable' +
-        '</button>';
-
-
 
     //legacy code
    /* var row = fixedTable.insertRow(0);
@@ -361,28 +352,18 @@ var buildJson = function(jsonParts){
 
     });
 
-    var div = document.getElementById("json_display");
-    if(div.hasChildNodes()){
-        var children = div.childNodes;
-        for(var i = 0; i < children.length; i++){
-            div.removeChild(children[i]);
-        }
+    var div = document.getElementById("outputModalBody");
+    if(div.innerHTML != null){
+        div.innerHTML = "";
     }
+    
     var para = document.createElement("textarea");
     div.appendChild(para);
     para.style.width = "100%";
+    para.style.height = "500px";
     para.value = JSON.stringify([finalJson]);
-    heightAdjust(para);
-};
 
-/*var showButtons = function(elementIn){
-    console.log(elementIn.id)
-    while(elementIn.nodeName.localeCompare("TABLE") != 0) {
-        console.log(elementIn.nodeName);
-        elementIn = elementIn.parentNode;
-    }
-    console.log(elementIn.id);
-};*/
+};
 
 var deleteColumn = function(element){
     var colNum = element.id;
@@ -417,11 +398,9 @@ var deleteRow = function(element, fixed){
     if(!fixed) {
         updateRowIndices(table);
     } else {
-        var rows = document.getElementById("overlay_table").rows;
-        var length = rows.length;
-        for(var i = 1; i < length - 1; i++){
-            console.log(rows[i].cells[0].childNodes[1].id);
-            rows[i].cells[0].childNodes[1].id = i;
+        var length = table.rows.length;
+        for(var i = 0; i < length; i++){
+            table.rows[i].cells[0].getElementsByTagName("A")[0].id = i;
         }
     }
 };
@@ -469,7 +448,7 @@ var addColumn = function(){
     var input = document.getElementById("column_name");
     var colName = input.value;
     var nested = document.getElementById("col_array").checked;
-    var table = document.getElementById(input.getAttribute("data-location"));
+    var table = $("#pulse_table")[0];
     var rowLength = table.rows.length;
 
     var colLength = table.rows[0].cells.length;
@@ -477,15 +456,7 @@ var addColumn = function(){
         colLength = 1;
     }
 
-    var string3;
-
-    if(table.id.localeCompare("pulse_table") == 0){
-        string3 = "Array";
-    } else {
-        string3 = "EMPTY";
-    }
-
-
+    var string3 = "Array";
 
     if(colName.localeCompare("") != 0) {
         for (var i = 0; i < rowLength ; i++) {
@@ -537,7 +508,7 @@ var addColumn = function(){
 var addRow = function(end, position){
     //var input = document.getElementById("row_name");
     var input = document.getElementById("row_select");
-    var table = document.getElementById(input.getAttribute("data-location"));
+    var table = $("#pulse_table")[0];
     var cellNum = table.rows[0].cells.length;
     var numRows = table.rows.length;
     var body = table.getElementsByTagName("TBODY")[0];
@@ -571,7 +542,7 @@ var addRow = function(end, position){
                     var nested = (table.rows[0].cells[i].getElementsByTagName("INPUT")[0].id.split("~~#").length == 3);
 
                     if (nested) {
-                        var id = colType + "~~#" + rowLoc + "~~#" + table.rows[1].cells[i].getElementsByTagName("INPUT")[0].id.split("~~#")[2];
+                        var id = colType + "~~#" + rowLoc + "~~#" + table.rows[0].cells[i].getElementsByTagName("INPUT")[0].id.split("~~#")[2];
                     } else {
                         id = colType + "~~#" + rowLoc;
                     }
@@ -587,7 +558,7 @@ var addRow = function(end, position){
 
         updateRowIndices(table);
     } else {
-        row = table.insertRow(table.rows.length - 1);
+        row = table.insertRow(table.rows.length + 1);
         cell = row.insertCell(0);
         cell.innerHTML = '<b>' + rowLoc + ' </b>';
         cell.innerHTML += "<a id='"
@@ -606,33 +577,25 @@ var addFixedRow = function(){
     var rowNum = table.rows.length;
     var input = document.getElementById("row_select");
     var name = input.value;
-    var row = table.insertRow(rowNum - 1);
+    var row = table.insertRow(rowNum);
     var cell = row.insertCell(0);
     cell.innerHTML = "<b><input type='text' class='form-control form-control-borderless col-lg' "
         + "style='display:inline-block;float:left;' onkeyup='widthAdjust(this);emptyError(this);' value='"
         + name
         + "' id='"
-        + name + String(rowNum - 1)
+        + name + String(rowNum)
         +"'></b><a id='" +
-        + String(rowNum-1)
+        + String(rowNum)
         + "' class='close' onclick='deleteRow(this, true)' style='float:left; margin-left:10px; margin-top: 5px;'>&times;</a> ";
 
     cell.innerHTML += "<textarea class='form-control form-control-borderless col-lg-1' id='"
         + name
-        + "' onkeyup='heightAdjust(this);emptyError(this);' style='height: auto;' ></textarea>";
+        + "' onkeyup='heightAdjust(this);emptyError(this);' style='height: auto; min-width: 90vw' ></textarea>";
 
     var element = document.getElementById(name);
     heightAdjust(element);
-    widthAdjust(document.getElementById(name + String(rowNum - 1)));
+    widthAdjust(document.getElementById(name + String(rowNum)));
     emptyError(element);
-};
-
-var updateModalLocation = function(element){
-    document.getElementById("column_name")
-        .setAttribute("data-location", element.getAttribute("data-location"));
-    //document.getElementById("row_name")
-    document.getElementById("row_select")
-        .setAttribute("data-location", element.getAttribute("data-location"));
 };
 
 var heightAdjust =  function(element) {
@@ -656,7 +619,7 @@ var widthAdjust = function(element){
     element.style.width = "200px";
 };
 
-var updateSelectionNumbers = function(element){
+var updateSelectionNumbers = function(){
     var table = document.getElementById("overlay_table");
     var list = document.getElementById("row_dropdown");
 
@@ -703,5 +666,116 @@ var emptyError = function(inputElement){
         cell.className += "danger";
     }
 };
+
+var transitionPane = function(next, element){
+    element = $("#protocol_container").children("div").filter(function(){return $(this).css("display") != "none"})[0];
+    var panes = ["pulses", "fixed_vars"];
+    var current = 0;
+    for(var i = 0; i < 2; i++){
+        if(element.id.localeCompare(panes[i]) == 0){
+            current = i;
+            break;
+        }
+    }
+
+    var transitionTo;
+
+    if(next) {
+        transitionTo = (current + 1) % 2;
+    } else {
+        transitionTo = current - 1;
+        if(transitionTo == -1){
+            transitionTo = 1;
+        }
+    }
+
+    if(transitionTo == 0){
+        $("#previous").fadeOut("slow", function(){
+            $(this).css("visibility", "hidden").css("display", "");
+            $("#next").css("visibility", "visible").hide().fadeIn("slow");
+        });
+        $("#get_data").fadeOut("slow", function(){
+            $(this).css("visibility", "hidden").css("display", "");
+        });
+    }
+
+    if(transitionTo == 1){
+        $("#next").fadeOut("slow", function(){
+            $(this).css("visibility", "hidden").css("display", "");
+            $("#previous, #get_data").css("visibility", "visible").hide().fadeIn();
+        });
+    }
+
+    animate(current, transitionTo, panes);
+};
+
+var animate = function(current, next, panes){
+    $("#" + panes[current]).fadeOut("slow", function () {
+        $("#" + panes[next]).fadeIn("slow", function(){
+            if(next == 1){
+                var fixed = $("#" + panes[1]).find("textarea");
+                for(var i = 0; i < fixed.length; i++){
+                    heightAdjust(fixed[i]);
+                }
+            }
+        });
+    });
+};
+
+var createBlankProtocol = function(rows, columns, nested, fixed){
+    var pulseTableJQ = $("#pulse_table");
+    var head = pulseTableJQ.find("thead")[0];
+    for(var i = 1; i < parseInt(columns) + 1; i++){
+        var cell = head.rows[0].insertCell(i);
+        cell.innerHTML = "<div style='width:200px'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
+            + "~~#" + 0
+            + "' value='' onkeyup='updateRowIndices();emptyError(this);' style='float: left; width: 150px;'></b><a id='"
+            + String(i)
+            + "' class='close' onclick='deleteColumn(this)' style='float:right;'>&times;</a></div>";
+    }
+
+    for(i = parseInt(columns) + 1; i < parseInt(columns) + parseInt(nested) + 1; i++){
+        cell = head.rows[0].insertCell(i);
+        cell.innerHTML = "<div style='width:200px'><b><input type='text' class='form-control form-control-borderless col-lg' id='"
+            +"~~#" + 0 + "~~#Array"
+            + "' value='' onkeyup='updateRowIndices();emptyError(this);' style='float: left; width: 150px;'></b>"
+            +"<span class='glyphicon glyphicon-unchecked'></span><a id='"
+            + String(i)
+            + "' class='close' onclick='deleteColumn(this)' style='float:right; margin-top: 7px;'>&times;</a></div>"
+    }
+
+    for(i = 0; i < rows; i++){
+        addRow(true, 0);
+    }
+
+
+    var table = $("#fixed_table")[0];
+    var rowNum = table.rows.length;
+    var name = "";
+    for(i = 0; i < parseInt(fixed); i++) {
+        var row = table.insertRow(rowNum);
+        cell = row.insertCell(0);
+        cell.innerHTML = "<b><input type='text' class='form-control form-control-borderless col-lg' "
+            + "style='display:inline-block;float:left;' onkeyup='widthAdjust(this);emptyError(this);' value='"
+            + name
+            + "' id='"
+            + name + String(rowNum)
+            + "'></b><a id='" + +String(rowNum)
+            + "' class='close' onclick='deleteRow(this, true)' style='float:left; margin-left:10px; margin-top: 5px;'>&times;</a> ";
+
+        cell.innerHTML += "<textarea class='form-control form-control-borderless col-lg-1' id='"
+            + name
+            + "' onkeyup='heightAdjust(this);emptyError(this);' style='height: auto; min-width: 90vw' ></textarea>";
+
+        widthAdjust(document.getElementById(name + String(rowNum)));
+    }
+};
+
+var getFromNewProtocolModal = function(){
+    createBlankProtocol($("#pulse_sets")[0].value, $("#pulse_vars")[0].value, $("#nested_pulse_vars")[0].value, $("#fixed_vars_input")[0].value);
+};
+
+
+
 
 
