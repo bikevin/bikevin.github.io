@@ -1,0 +1,24 @@
+{
+  "name": "bikevin.github.io",
+  "description": "A data analyzer",
+  "main": "index.html",
+  "authors": [
+    "Kevin Bi"
+  ],
+  "license": "MIT",
+  "homepage": "bikevin.github.io",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "papaparse": "^4.1.2",
+    "handsontable": "^0.26.1",
+    "synaptic": "^1.0.8",
+    "d3": "^4.2.2"
+  }
+}
