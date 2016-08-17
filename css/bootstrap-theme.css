@@ -585,3 +585,41 @@ fieldset[disabled] .btn-danger.active {
           box-shadow: inset 0 1px 3px rgba(0, 0, 0, .05), 0 1px 0 rgba(255, 255, 255, .1);
 }
 /*# sourceMappingURL=bootstrap-theme.css.map */
+
+
+/* --- custom css --- */
+#choose{
+  display: none;
+  min-height: 500px;
+}
+
+#dataTable{
+  height: 0;
+  overflow-y: auto;
+}
+
+#tableRow, #networkBuild, #buildDialog{
+  display: none;
+}
+
+#choose > div > div {
+  text-align:center;
+}
+
+.left{
+  float: left;
+}
+
+.right{
+  float: right;
+}
+
+.defaultFont{
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.listHeader{}
+
+#categoryChecker{
+  width: 50%;
+}
