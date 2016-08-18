@@ -45,3 +45,6 @@ function isCategorical(data){
     return categorical;
 }
 
+function toFinalData(preData, categorical){
+    
+}

@@ -139,7 +139,7 @@ function buildCategoryChecker(){
             .appendTo(radioDiv);
 
         $("<input type='radio'>")
-            .attr('id', $(predictors[i]).text()).attr('name', i).appendTo(label);
+            .attr('id', $(predictors[i]).text()).attr('name', 'indep' + i).appendTo(label);
 
         $("<span>").text('Categorical').appendTo(label);
 
@@ -149,16 +149,23 @@ function buildCategoryChecker(){
             .appendTo(radioDiv);
 
         $("<input type='radio' name='continuous'>")
-            .attr('id', $(predictors[i]).text()).attr('name', i).appendTo(label);
+            .attr('id', $(predictors[i]).text()).attr('name', 'indep' + i).appendTo(label);
 
         $("<span>").text('Continuous').appendTo(label);
+
+
+        if(categorical[$(predictors[i]).text()]){
+            $(div.find('input').get(0)).prop('checked', true);
+        } else {
+            $(div.find('input').get(1)).prop('checked', true);
+        }
     }
 
     for(i = 0; i < predicted.length; i++){
         div = $("<div>").appendTo(
             $("<div class='list-group-item'>").appendTo(depBase));
 
-        $("<span>").text($(predictors[i]).text()).appendTo(div);
+        $("<span>").text($(predicted[i]).text()).appendTo(div);
 
         radioDiv = $("<div class='right'>").appendTo(div);
 
@@ -166,7 +173,7 @@ function buildCategoryChecker(){
             .appendTo(radioDiv);
 
         $("<input type='radio' name='categorical'>")
-            .attr('id', $(predictors[i]).text()).attr('name', i).appendTo(label);
+            .attr('id', $(predicted[i]).text()).attr('name', 'dep' + i).appendTo(label);
 
         $("<span>").text('Categorical').appendTo(label);
 
@@ -174,9 +181,15 @@ function buildCategoryChecker(){
             .appendTo(radioDiv);
 
         $("<input type='radio' name='continuous'>")
-            .attr('id', $(predictors[i]).text()).attr('name', i).appendTo(label);
+            .attr('id', $(predicted[i]).text()).attr('name', 'dep' + i).appendTo(label);
 
         $("<span>").text('Continuous').appendTo(label);
+
+        if(!categorical[$(predicted[i]).text()]){
+            $(div.find('input').get(0)).prop('checked', true);
+        } else {
+            $(div.find('input').get(1)).prop('checked', true);
+        }
     }
 
 
