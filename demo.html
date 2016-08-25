@@ -117,22 +117,119 @@
             </div>
         </div>
         <div class="row" id="buildDialog">
-            <h4>Done choosing? Let's move to building the neural network.</h4>
-            <button id="buildStart" class="form-control form-group-lg">Build!</button>
+            <h4>Done choosing? Let's double check and see if our variables are categorical or continuous.</h4>
+            <button id="check" class="form-control form-group-lg">Check!</button>
         </div>
-        <div class="row" id="networkBuild">
-            <h4>Before we start, we'll make sure that our categorical/continuous variables are identified correctly.</h4>
+        <div class="row" id="category">
+            <h4>Variable 4 is categorical and seems to be marked incorrectly - change it! (or not. Doesn't matter to me.)</h4>
             <div id="indepChecker" class="col-md-6 list-group">
                 <div class="list-group-item">
-                    <div>
+                    <div class="listHeader">
                         <span>Independent</span>
                     </div>
                 </div>
             </div>
             <div id="depChecker" class="col-md-6 list-group">
                 <div class="list-group-item">
-                    <div>
+                    <div class="listHeader">
                         <span>Dependent</span>
+                    </div>
+                </div>
+            </div>
+            </div>
+        <div class="row" id="networkBuild">
+            <h4>Everything looks good? Let's build the network!</h4>
+            <button id="buildStart" class="form-control form-group-lg">Build!</button>
+            <div id="networkWizard">
+                <div id="layerList" class="col-md-6 list-group">
+                    <div id="notOutputLayer">
+                        <div class="list-group-item" id="0" data-type="input" data-size=""
+                             data-nonlin="identity">
+                            <span>Input Layer</span>
+                        </div>
+                    </div>
+                    <div class="list-group-item" id="end" data-type="output" data-size=""
+                        data-nonlin="identity">
+                        <span>Output Layer</span>
+                    </div>
+                    <div class="list-group-item" id="addLayer">
+                        <span>Add Layer</span>
+                    </div>
+                </div>
+                <div id="layerOptions" class="col-md-6 list-group">
+                    <div class="list-group-item">
+                        <span>Layer type: </span>
+                        <label id="layerType"></label>
+                    </div>
+                    <div class="list-group-item" id="layerSize">
+                        <label> Number of neurons in layer:
+                            <input type="number" name="size" id="size" class="form-control">
+                        </label>
+                    </div>
+                    <div class="list-group-item" id="nonLinearity">
+                        <label> Type of nonlinearity:
+                            <select name="nonlin" id="nonlin" class="form-control">
+                                <option value="identity">Identity</option>
+                                <option value="TanH">TanH</option>
+                                <option value="ReLU">ReLU</option>
+                                <option value="Sigmoid">Sigmoid</option>
+                            </select>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div id="trainingOptions" class="row">
+            <div class="col-md-4"></div>
+            <div class="col-md-4 list-group">
+                <div class="list-group-item">
+                    <span><b>Training Parameters</b></span>
+                </div>
+                <div class="list-group-item">
+                    <label> Learning rate (10^-x):
+                        <input type="number" name="rate" id="rate" class="form-control">
+                    </label>
+                </div>
+                <div class="list-group-item">
+                    <label> Number of iterations:
+                        <input type="number" name="iterations" id="iterations" class="form-control">
+                    </label>
+                </div>
+                <div class="list-group-item">
+                    <label> Stopping error (10^-x):
+                        <input type="number" name="error" id="error" class="form-control">
+                    </label>
+                </div>
+            </div>
+            <div class="col-md-4"></div>
+        </div>
+        <div id="startTraining" class="row">
+            <h4>Done? Let's start training!</h4>
+            <button id="trainStart" class="form-control form-group-lg">Train!</button>
+            <div id="errorGraph" class="col-md-8"></div>
+            <div id="performance" class="col-md-4">
+                <div class="col-md-12">
+                    <div class="left" id="currError">
+                        Current Error:
+                        <br>
+                        <span></span>
+                    </div>
+                    <div class="right" id="minError">
+                        Lowest Error:
+                        <br>
+                        <span></span>
+                    </div>
+                </div>
+                <div class="col-md-12" id="trainStats">
+                    <div class="left" id="currIter">
+                        Current Iteration:
+                        <br>
+                        <span></span>
+                    </div>
+                    <div class="right" id="minIter">
+                        Best Iteration:
+                        <br>
+                        <span></span>
                     </div>
                 </div>
             </div>

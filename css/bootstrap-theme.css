@@ -598,7 +598,8 @@ fieldset[disabled] .btn-danger.active {
   overflow-y: auto;
 }
 
-#tableRow, #networkBuild, #buildDialog{
+#tableRow, #networkBuild, #category, #buildDialog,
+#networkWizard, #startTraining, #trainingOptions{
   display: none;
 }
 
@@ -623,3 +624,19 @@ fieldset[disabled] .btn-danger.active {
 #categoryChecker{
   width: 50%;
 }
+
+#notOutputLayer{
+  margin-bottom: -1px;
+}
+
+#notOutputLayer div.list-group-item:last-child{
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.line {
+  fill: none;
+  stroke: steelblue;
+  stroke-width: 2px;
+}
+
