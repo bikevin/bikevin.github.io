@@ -115,8 +115,6 @@ function toFinalData(preData, categorical, inputs, outputs){
                 preData.splice(index, 0, innerValue);
                 isInput.splice(index, 0, toRepeat)
             });
-            
-            classObject[index] = classes;
         }
 
     });
