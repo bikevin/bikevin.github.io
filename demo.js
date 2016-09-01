@@ -13,6 +13,7 @@ var _error = [];
 var _errorMinMax = [Number.MAX_VALUE, Number.MIN_VALUE];
 var _x, _y;
 var _skips = 1;
+var _normalize;
 
 
 $(document).ready(function(){
@@ -87,9 +88,33 @@ $(document).ready(function(){
     $("#trainStart").click(function(){
         generateLayerArray();
         _network = createNetwork(_layerArray);
-        trainNetwork(_network, createTrainingData(_data, _isinput), getTrainingInfo());
+        _normalize = normalize(_data);
+        trainNetwork(_network, createTrainingData(_data, _isinput, _normalize), getTrainingInfo());
         createErrorGraph();
-        $("#trainStats").show();
+        $("#startNetworkStats").show();
+        $("#performance").show();
+    });
+
+    $("#statsStart").click(function(){
+        createImportanceGraph();
+        var select = $("#selectPoint").find('select');
+        select.html('');
+        $("<option value='all'>").text('All').appendTo(select);
+
+        $.each(_data, function(index, value){
+            $("<option value='" + index + "'>").text(index).appendTo(select);
+        })
+    });
+
+    $("#importance").click(function(){
+
+        var value = $("#selectPoint").find('select').val();
+
+        if(value == "all"){
+            createImportanceGraph();
+        } else {
+            createIndividualImportanceGraph(value);
+        }
     })
 
 
@@ -356,7 +381,6 @@ function getTrainingInfo(){
             error: parseFloat($("#error").val())};
 }
 
-
 function trainNetwork(network, trainingData, trainingInfo){
 
     var trainer = new synaptic.Trainer(network);
@@ -496,3 +520,230 @@ function updateErrorGraph(){
     svg.select('.y.axis').call(d3.axisRight(_y));
 
 }
+
+function createImportanceGraph(){
+
+    $("#overallImportance").html('');
+
+    var netImportance = contribution(_network);
+
+    var overallImportance = [];
+
+    $.each(_isinput, function(index, value){
+        if(value) {
+            overallImportance.push(0);
+        }
+
+    });
+
+    $.each(_normalize(_data), function(index, value){
+
+        var input = [];
+        $.each(value, function(innerIndex, innerValue){
+            if(_isinput[innerIndex]){
+                input.push(innerValue);
+            }
+        });
+
+        var dataImportance = netImportance(input);
+
+        $.each(dataImportance, function(innerIndex, innerValue){
+
+            overallImportance[innerIndex] += innerValue;
+
+        });
+
+
+    });
+
+    var total = 0;
+
+    $.each(overallImportance, function(index, value){
+
+        if(value < 0){
+            value *= -1;
+        }
+
+        total += value;
+
+    });
+
+    var overallImportancePercent = [];
+
+    $.each(overallImportance, function(index, value){
+
+        overallImportancePercent.push(value / total);
+
+    });
+
+    overallImportance = overallImportancePercent;
+    console.log(overallImportance);
+
+    var x = d3.scaleBand().rangeRound([0, 500]).padding(0.1);
+    var y = d3.scaleLinear().range([250, 0]);
+
+    var max = d3.max(overallImportance);
+
+    if(max < (-1 * d3.min(overallImportance))){
+        max = -1 * d3.min(overallImportance);
+    }
+
+    x.domain(overallImportance.map(function(d) {return $.inArray(d, overallImportance)}));
+    y.domain([-1 * max, max]);
+
+    var xAxis = d3.axisBottom(x);
+    var yAxis = d3.axisRight(y);
+
+
+    var svg = d3.select('#overallImportance').append('svg')
+        .attr('width', 600).attr('height', 320)
+        .append('g')
+        .attr('transform', 'translate(20, 20)');
+
+    svg.selectAll('.bar').data(overallImportance)
+        .enter().append('rect')
+        .attr('class', 'bar')
+        .attr('x', function(d){return x($.inArray(d, overallImportance))})
+        .attr('width', x.bandwidth())
+        .attr('y', function(d){return y(d)})
+        .attr('height', function(d){
+
+            var height = 125 - y(d);
+            if(height < 0){
+                d3.select(this).attr('transform', 'translate(0, ' + height + ')');
+                height *= -1;
+            }
+            return height});
+
+    svg.append('g')
+        .attr('class', 'x axis')
+        .attr('transform', 'translate(0, 125)')
+        .call(xAxis);
+
+    svg.append('g')
+        .attr('class', 'y axis')
+        .attr('transform', 'translate(500, 0)')
+        .call(yAxis);
+
+    svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("y", 530)
+        .attr("x", -40)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("Training Contribution Scores");
+}
+
+function createIndividualImportanceGraph(pointID){
+    $("#overallImportance").html('');
+
+    var netImportance = contribution(_network);
+
+    var overallImportance = [];
+
+    $.each(_isinput, function(index, value){
+        if(value) {
+            overallImportance.push(0);
+        }
+
+    });
+
+    $.each(_normalize(_data), function(index, value){
+
+        if(index == pointID) {
+
+            var input = [];
+            $.each(value, function (innerIndex, innerValue) {
+                if (_isinput[innerIndex]) {
+                    input.push(innerValue);
+                }
+            });
+
+            var dataImportance = netImportance(input);
+
+            $.each(dataImportance, function (innerIndex, innerValue) {
+
+                overallImportance[innerIndex] += innerValue;
+
+            });
+        }
+    });
+
+    var total = 0;
+
+    $.each(overallImportance, function(index, value){
+
+        if(value < 0){
+            value *= -1;
+        }
+
+        total += value;
+
+    });
+
+    var overallImportancePercent = [];
+
+    $.each(overallImportance, function(index, value){
+
+        overallImportancePercent.push(value / total);
+
+    });
+
+    overallImportance = overallImportancePercent;
+    console.log(overallImportance);
+
+    var x = d3.scaleBand().rangeRound([0, 500]).padding(0.1);
+    var y = d3.scaleLinear().range([250, 0]);
+
+    var max = d3.max(overallImportance);
+
+    if(max < (-1 * d3.min(overallImportance))){
+        max = -1 * d3.min(overallImportance);
+    }
+
+    x.domain(overallImportance.map(function(d) {return $.inArray(d, overallImportance)}));
+    y.domain([-1 * max, max]);
+
+    var xAxis = d3.axisBottom(x);
+    var yAxis = d3.axisRight(y);
+
+
+    var svg = d3.select('#overallImportance').append('svg')
+        .attr('width', 600).attr('height', 320)
+        .append('g')
+        .attr('transform', 'translate(20, 20)');
+
+    svg.selectAll('.bar').data(overallImportance)
+        .enter().append('rect')
+        .attr('class', 'bar')
+        .attr('x', function(d){return x($.inArray(d, overallImportance))})
+        .attr('width', x.bandwidth())
+        .attr('y', function(d){return y(d)})
+        .attr('height', function(d){
+
+            var height = 125 - y(d);
+            if(height < 0){
+                d3.select(this).attr('transform', 'translate(0, ' + height + ')');
+                height *= -1;
+            }
+            return height});
+
+    svg.append('g')
+        .attr('class', 'x axis')
+        .attr('transform', 'translate(0, 125)')
+        .call(xAxis);
+
+    svg.append('g')
+        .attr('class', 'y axis')
+        .attr('transform', 'translate(500, 0)')
+        .call(yAxis);
+
+    svg.append("text")
+        .attr("text-anchor", "end")
+        .attr("y", 530)
+        .attr("x", -40)
+        .attr("dy", ".75em")
+        .attr("transform", "rotate(-90)")
+        .text("Contribution Scores for point " + pointID);
+}
+

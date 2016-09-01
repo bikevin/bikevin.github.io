@@ -71,9 +71,13 @@ function toFinalData(preData, categorical, inputs, outputs){
         } else isInput[i] = inputs.indexOf(i) != -1;
     }
     
-    var classObject = {};
+    var classesOut = [];
 
     $.each(categorical, function(index, value){
+
+        if(!value){
+            classesOut.push(index);
+        }
 
         if(value){
 
@@ -82,6 +86,7 @@ function toFinalData(preData, categorical, inputs, outputs){
             $.each(preData[index], function(innerIndex, innerValue){
                 if($.inArray(innerValue, classes) == -1){
                     classes.push(innerValue);
+                    classesOut.push(index);
                 }
             });
 
@@ -116,7 +121,7 @@ function toFinalData(preData, categorical, inputs, outputs){
 
     });
     
-    return {classes: classObject, data:transpose(preData), isInput:isInput};
+    return {classes: classesOut, data:transpose(preData), isInput:isInput};
 
 }
 
@@ -142,14 +147,14 @@ function createNetwork(layerArray){
     });
 }
 
-function createTrainingData(data, isInput){
+function createTrainingData(data, isInput, normalizer){
 
     if(data[0].length != isInput.length){
         console.error('createTrainingData length mismatch');
         return 'ERROR: length mismatch'
     }
 
-    data = normalizeData(data);
+    data = normalizer(data);
 
     var trainingData = [];
 
@@ -177,11 +182,11 @@ function createTrainingData(data, isInput){
     return trainingData;
 }
 
-function normalizeData(data){
+function normalize(data){
 
-    var normalized = transpose(data);
+    var normalizeParams = [];
 
-    $.each(normalized, function(index, value){
+    $.each(transpose(data), function(index, value){
 
         var mean = 0;
         var max = Number.MIN_VALUE;
@@ -200,14 +205,29 @@ function normalizeData(data){
 
         var range = max - min;
 
-        $.each(value, function(innerIndex, innerValue){
-            value[innerIndex] -= mean;
-            value[innerIndex] /= range;
-        });
+        var temp = {mean: mean, range: range};
 
+        normalizeParams.push(temp);
     });
 
-    return transpose(normalized);
+    return function(dataToNormalize){
+
+        var transposed = transpose(dataToNormalize);
+
+        $.each(transposed, function(index, value){
+
+            $.each(value, function(innerIndex, innerValue){
+
+                transposed[innerIndex] -= normalizeParams[index].mean;
+                transposed[innerIndex] /= normalizeParams[index].range;
+
+            })
+
+        });
+
+        return transpose(transposed);
+
+    }
 }
 
 function round(number, precision) {
@@ -215,4 +235,150 @@ function round(number, precision) {
     var tempNumber = number * factor;
     var roundedTempNumber = Math.round(tempNumber);
     return roundedTempNumber / factor;
+}
+
+function contribution(network){
+
+    var weights = {};
+
+    var layerWeights = {};
+
+    $.each(network.layers.input.list, function(index, value){
+
+        var temp = {};
+
+        $.each(Object.keys(value.connections.projected), function(innerIndex, innerValue){
+
+            temp[innerValue] = value.connections.projected[innerValue].weight;
+
+        });
+
+        layerWeights[value.ID] = temp;
+
+    });
+
+    weights['input'] = layerWeights;
+
+    $.each(network.layers.hidden, function(index, value){
+
+        layerWeights = {};
+
+        $.each(value.list, function(innerIndex, innerValue){
+
+            var temp = {};
+
+            $.each(Object.keys(innerValue.connections.projected), function(innerInnerIndex, innerInnerValue){
+
+                temp[innerInnerValue] = innerValue.connections.projected[innerInnerValue].weight;
+
+            });
+
+            layerWeights[innerValue.ID] = temp;
+
+        });
+
+        weights[index] = layerWeights;
+
+    });
+
+    var refPoint = [];
+
+    for(var i = 0; i < network.layers.input.size; i++){
+        refPoint.push(0);
+    }
+
+    network.layers.input.activate(refPoint);
+
+    var refActivations = {};
+
+    $.each(network.layers.hidden, function(index, value){
+
+        refActivations[index] = value.activate();
+
+    });
+
+    refActivations['output'] = network.layers.output.activate();
+
+    return function(singlePoint){
+
+        network.layers.input.activate(singlePoint);
+
+        var deltaActivations = {};
+
+        $.each(network.layers.hidden, function(index, value){
+            deltaActivations[index] = value.activate();
+
+            $.each(deltaActivations[index], function(innerIndex, innerValue){
+                deltaActivations[index][innerIndex] -= refActivations[index][innerIndex];
+            });
+
+        });
+
+        deltaActivations['output'] = network.layers.output.activate();
+
+        $.each(deltaActivations['output'], function(innerIndex, innerValue){
+            deltaActivations['output'][innerIndex] -= refActivations['output'];
+        });
+        var numHidden = network.layers.hidden.length;
+
+        var currentValues = deltaActivations.output;
+
+        for(var i = numHidden - 1; i > -1; i--){
+
+            var newValues = [];
+
+            $.each(weights[i], function(index, value){
+
+                var temp = 0;
+
+                $.each(currentValues, function(innerIndex, innerValue){
+
+                    temp += value[Object.keys(value)[innerIndex]] * innerValue;
+
+                });
+
+                newValues.push(temp);
+
+
+            });
+
+            currentValues = newValues;
+
+            for(var j = 0; j < currentValues.length; j++){
+
+                currentValues[j] *= deltaActivations[i][j];
+
+            }
+
+        }
+
+        newValues = [];
+
+        $.each(weights['input'], function(index, value){
+
+            var temp = 0;
+
+            $.each(currentValues, function(innerIndex, innerValue){
+
+                temp += value[Object.keys(value)[innerIndex]] * innerValue;
+
+            });
+
+            newValues.push(temp);
+
+        });
+
+        currentValues = newValues;
+
+        for(j = 0; j < currentValues.length; j++){
+
+            currentValues[j] *= singlePoint[j];
+
+        }
+
+        return currentValues;
+
+    }
+
+
 }

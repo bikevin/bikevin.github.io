@@ -599,7 +599,8 @@ fieldset[disabled] .btn-danger.active {
 }
 
 #tableRow, #networkBuild, #category, #buildDialog,
-#networkWizard, #startTraining, #trainingOptions{
+#networkWizard, #startTraining, #trainingOptions,
+#startNetworkStats, #performance{
   display: none;
 }
 
@@ -638,5 +639,21 @@ fieldset[disabled] .btn-danger.active {
   fill: none;
   stroke: steelblue;
   stroke-width: 2px;
+}
+
+#performance .col-md-12{
+  padding-top: 50px;
+}
+
+#performance{
+  font-size: large;
+}
+
+.bar {
+  fill: steelblue;
+}
+
+#selectPoint {
+  padding-top: 50px;
 }
 
