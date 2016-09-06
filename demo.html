@@ -242,9 +242,26 @@
                 <label> Select a point to analyze:
                     <select></select>
                 </label>
-                <button id="importance" class="btn btn-default">Analyze Importances</button>
+                <button id="importance" class="btn btn-default">Analyze Existing Point</button>
+                <div style="height:20px;"></div>
+                <label> Or enter in your own data point to analyze:
+                    <input class="form-control" type="text">
+                </label>
+                <button id="predict" class="btn btn-default">Analyze Custom Point</button>
             </div>
-            <h4>We can also make predictions with the trained network.</h4>
+            <div class="col-md-12">
+                <div class="col-md-8">
+                    Input point goes here
+                </div>
+                <div class="col-md-4">
+                    <div class="col-md-12">
+                        Prediction goes here
+                    </div>
+                    <div class="col-md-12">
+                        Actual goes here
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 

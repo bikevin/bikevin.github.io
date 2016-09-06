@@ -216,8 +216,8 @@ function normalize(data){
 
             $.each(value, function(innerIndex, innerValue){
 
-                transposed[innerIndex] -= normalizeParams[index].mean;
-                transposed[innerIndex] /= normalizeParams[index].range;
+                value[innerIndex] -= normalizeParams[index].mean;
+                value[innerIndex] /= normalizeParams[index].range;
 
             })
 

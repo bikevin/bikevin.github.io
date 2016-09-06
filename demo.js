@@ -113,8 +113,14 @@ $(document).ready(function(){
         if(value == "all"){
             createImportanceGraph();
         } else {
-            createIndividualImportanceGraph(value);
+            createImportanceGraph(value);
         }
+    });
+
+    $("#predict").click(function(){
+
+
+
     })
 
 
@@ -521,121 +527,21 @@ function updateErrorGraph(){
 
 }
 
-function createImportanceGraph(){
+function createImportanceGraph(pointID){
 
-    $("#overallImportance").html('');
+    var yText = '';
 
-    var netImportance = contribution(_network);
-
-    var overallImportance = [];
-
-    $.each(_isinput, function(index, value){
-        if(value) {
-            overallImportance.push(0);
+    function innerSelector(index){
+        if(pointID){
+            yText = 'Contribution Scores for point ' + pointID;
+            return index == pointID;
+        } else {
+            yText = 'Contribution Scores for Custom Point';
+            return true;
         }
-
-    });
-
-    $.each(_normalize(_data), function(index, value){
-
-        var input = [];
-        $.each(value, function(innerIndex, innerValue){
-            if(_isinput[innerIndex]){
-                input.push(innerValue);
-            }
-        });
-
-        var dataImportance = netImportance(input);
-
-        $.each(dataImportance, function(innerIndex, innerValue){
-
-            overallImportance[innerIndex] += innerValue;
-
-        });
-
-
-    });
-
-    var total = 0;
-
-    $.each(overallImportance, function(index, value){
-
-        if(value < 0){
-            value *= -1;
-        }
-
-        total += value;
-
-    });
-
-    var overallImportancePercent = [];
-
-    $.each(overallImportance, function(index, value){
-
-        overallImportancePercent.push(value / total);
-
-    });
-
-    overallImportance = overallImportancePercent;
-    console.log(overallImportance);
-
-    var x = d3.scaleBand().rangeRound([0, 500]).padding(0.1);
-    var y = d3.scaleLinear().range([250, 0]);
-
-    var max = d3.max(overallImportance);
-
-    if(max < (-1 * d3.min(overallImportance))){
-        max = -1 * d3.min(overallImportance);
     }
 
-    x.domain(overallImportance.map(function(d) {return $.inArray(d, overallImportance)}));
-    y.domain([-1 * max, max]);
 
-    var xAxis = d3.axisBottom(x);
-    var yAxis = d3.axisRight(y);
-
-
-    var svg = d3.select('#overallImportance').append('svg')
-        .attr('width', 600).attr('height', 320)
-        .append('g')
-        .attr('transform', 'translate(20, 20)');
-
-    svg.selectAll('.bar').data(overallImportance)
-        .enter().append('rect')
-        .attr('class', 'bar')
-        .attr('x', function(d){return x($.inArray(d, overallImportance))})
-        .attr('width', x.bandwidth())
-        .attr('y', function(d){return y(d)})
-        .attr('height', function(d){
-
-            var height = 125 - y(d);
-            if(height < 0){
-                d3.select(this).attr('transform', 'translate(0, ' + height + ')');
-                height *= -1;
-            }
-            return height});
-
-    svg.append('g')
-        .attr('class', 'x axis')
-        .attr('transform', 'translate(0, 125)')
-        .call(xAxis);
-
-    svg.append('g')
-        .attr('class', 'y axis')
-        .attr('transform', 'translate(500, 0)')
-        .call(yAxis);
-
-    svg.append("text")
-        .attr("text-anchor", "end")
-        .attr("y", 530)
-        .attr("x", -40)
-        .attr("dy", ".75em")
-        .attr("transform", "rotate(-90)")
-        .text("Training Contribution Scores");
-}
-
-function createIndividualImportanceGraph(pointID){
-    $("#overallImportance").html('');
 
     var netImportance = contribution(_network);
 
@@ -650,7 +556,7 @@ function createIndividualImportanceGraph(pointID){
 
     $.each(_normalize(_data), function(index, value){
 
-        if(index == pointID) {
+        if(innerSelector(index)) {
 
             var input = [];
             $.each(value, function (innerIndex, innerValue) {
@@ -667,6 +573,7 @@ function createIndividualImportanceGraph(pointID){
 
             });
         }
+
     });
 
     var total = 0;
@@ -676,7 +583,6 @@ function createIndividualImportanceGraph(pointID){
         if(value < 0){
             value *= -1;
         }
-
         total += value;
 
     });
@@ -689,34 +595,43 @@ function createIndividualImportanceGraph(pointID){
 
     });
 
-    overallImportance = overallImportancePercent;
-    console.log(overallImportance);
+    console.log(overallImportancePercent);
+
+    createBarGraph(overallImportancePercent, 'overallImportance', yText)
+}
+
+
+function createBarGraph(array, elementID, yText){
+
+    var elementSelect = '#' + elementID;
+
+    $(elementSelect).html('');
 
     var x = d3.scaleBand().rangeRound([0, 500]).padding(0.1);
     var y = d3.scaleLinear().range([250, 0]);
 
-    var max = d3.max(overallImportance);
+    var max = d3.max(array);
 
-    if(max < (-1 * d3.min(overallImportance))){
-        max = -1 * d3.min(overallImportance);
+    if(max < (-1 * d3.min(array))){
+        max = -1 * d3.min(array);
     }
 
-    x.domain(overallImportance.map(function(d) {return $.inArray(d, overallImportance)}));
+    x.domain(array.map(function(d) {return $.inArray(d, array)}));
     y.domain([-1 * max, max]);
 
     var xAxis = d3.axisBottom(x);
     var yAxis = d3.axisRight(y);
 
 
-    var svg = d3.select('#overallImportance').append('svg')
+    var svg = d3.select(elementSelect).append('svg')
         .attr('width', 600).attr('height', 320)
         .append('g')
         .attr('transform', 'translate(20, 20)');
 
-    svg.selectAll('.bar').data(overallImportance)
+    svg.selectAll('.bar').data(array)
         .enter().append('rect')
         .attr('class', 'bar')
-        .attr('x', function(d){return x($.inArray(d, overallImportance))})
+        .attr('x', function(d){return x($.inArray(d, array))})
         .attr('width', x.bandwidth())
         .attr('y', function(d){return y(d)})
         .attr('height', function(d){
@@ -744,6 +659,6 @@ function createIndividualImportanceGraph(pointID){
         .attr("x", -40)
         .attr("dy", ".75em")
         .attr("transform", "rotate(-90)")
-        .text("Contribution Scores for point " + pointID);
+        .text(yText);
 }
 
