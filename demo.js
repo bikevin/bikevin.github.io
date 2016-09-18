@@ -5,15 +5,18 @@
 var _data = [];
 var _categorical = [];
 var _table;
-var _classes = [];
+var _classMap = [];
 var _layerArray = [];
-var _isinput = [];
+var _isInput = [];
 var _network;
 var _error = [];
 var _errorMinMax = [Number.MAX_VALUE, Number.MIN_VALUE];
 var _x, _y;
 var _skips = 1;
 var _normalize;
+var _formatter;
+var _classContents = [];
+var _normalizeParams;
 
 
 $(document).ready(function(){
@@ -47,11 +50,14 @@ $(document).ready(function(){
     $("#buildStart").click(function(){
         getCategoricalFromChecker();
         var variables  = getFromCategorySetter();
-        var out = toFinalData(_data, _categorical, variables.input, variables.output);
+        var correctedColumns = removeUnusedColumns(_data, _categorical, variables.input, variables.output);
+        _formatter = toFinalData(correctedColumns.categorical, correctedColumns.isInput);
+        var out = _formatter(correctedColumns.data);
         _data = out.data;
-        _classes = out.classes;
-        _isinput = out.isInput;
+        _classMap = out.classMap;
+        _isInput = out.isInput;
         _table.loadData(_data);
+        _classContents = out.classContents;
         populateLayerWizard();
         $(this).hide();
         $("#networkWizard").show();
@@ -88,8 +94,10 @@ $(document).ready(function(){
     $("#trainStart").click(function(){
         generateLayerArray();
         _network = createNetwork(_layerArray);
-        _normalize = normalize(_data);
-        trainNetwork(_network, createTrainingData(_data, _isinput, _normalize), getTrainingInfo());
+        var normalized = normalize(_data);
+        _normalize = normalized.normalizer;
+        _normalizeParams = normalized.params;
+        trainNetwork(_network, createTrainingData(_data, _isInput, _normalize), getTrainingInfo());
         createErrorGraph();
         $("#startNetworkStats").show();
         $("#performance").show();
@@ -103,7 +111,11 @@ $(document).ready(function(){
 
         $.each(_data, function(index, value){
             $("<option value='" + index + "'>").text(index).appendTo(select);
-        })
+        });
+
+        $("#contributeInput").find("span").text("All points selected");
+        $("#contributeActual").find("span").text("All points selected");
+        $("#contributePredict").find("span").text('All points selected');
     });
 
     $("#importance").click(function(){
@@ -112,14 +124,32 @@ $(document).ready(function(){
 
         if(value == "all"){
             createImportanceGraph();
+            $("#contributeInput").find("span").text("All points selected");
+            $("#contributeActual").find("span").text("All points selected");
+            $("#contributePredict").find("span").text('All points selected');
         } else {
             createImportanceGraph(value);
+            var untransformed = unTransformDataPoint(_isInput, _classContents, JSON.parse(JSON.stringify(_data[value])));
+            $("#contributeInput").find("span").text(untransformed.input);
+            $("#contributeActual").find("span").text(untransformed.output);
+            $("#contributePredict").find("span").text(unTransformOutput(_normalizeParams, _network.activate(createTrainingData([JSON.parse(JSON.stringify(_data[value]))], _isInput, _normalize)[0].input), _isInput));
         }
     });
 
     $("#predict").click(function(){
+        var customVal = $("#selectPoint").find('input').val().split(',').map(function(currentValue){
+            return parseFloat(currentValue);
+        });
 
+        var deepCopy = JSON.parse(JSON.stringify(customVal));
 
+        var transformedCustom = transformDataPoint(_isInput, _classContents, customVal, _normalize);
+
+        $('#contributeInput').find("span").text(deepCopy);
+        $('#contributeActual').find("span").text('N/A');
+        $("#contributePredict").find("span").text(unTransformOutput(_normalizeParams, _network.activate(transformedCustom), _isInput));
+
+        createPredictImportanceGraph(transformedCustom);
 
     })
 
@@ -301,7 +331,7 @@ function populateLayerWizard(){
     var inputLength = 0;
     var outputLength = 0;
 
-    $.each(_isinput, function(index, value){
+    $.each(_isInput, function(index, value){
         if(value){
             inputLength++;
         } else {
@@ -439,7 +469,9 @@ function trainNetwork(network, trainingData, trainingInfo){
 
             }
         }
-    }).then(results => console.log('done!', results));
+    }).then(function(results){
+        console.log(results);
+    });
 
 }
 
@@ -536,7 +568,7 @@ function createImportanceGraph(pointID){
             yText = 'Contribution Scores for point ' + pointID;
             return index == pointID;
         } else {
-            yText = 'Contribution Scores for Custom Point';
+            yText = 'Contribution Scores for all points';
             return true;
         }
     }
@@ -547,7 +579,7 @@ function createImportanceGraph(pointID){
 
     var overallImportance = [];
 
-    $.each(_isinput, function(index, value){
+    $.each(_isInput, function(index, value){
         if(value) {
             overallImportance.push(0);
         }
@@ -560,7 +592,7 @@ function createImportanceGraph(pointID){
 
             var input = [];
             $.each(value, function (innerIndex, innerValue) {
-                if (_isinput[innerIndex]) {
+                if (_isInput[innerIndex]) {
                     input.push(innerValue);
                 }
             });
@@ -599,7 +631,6 @@ function createImportanceGraph(pointID){
 
     createBarGraph(overallImportancePercent, 'overallImportance', yText)
 }
-
 
 function createBarGraph(array, elementID, yText){
 
@@ -660,5 +691,51 @@ function createBarGraph(array, elementID, yText){
         .attr("dy", ".75em")
         .attr("transform", "rotate(-90)")
         .text(yText);
+}
+
+function createPredictImportanceGraph(inputPoint){
+
+    var netImportance = contribution(_network);
+
+    var overallImportance = [];
+
+    $.each(_isInput, function(index, value){
+        if(value) {
+            overallImportance.push(0);
+        }
+
+    });
+
+    var dataImportance = netImportance(inputPoint);
+
+    $.each(dataImportance, function (innerIndex, innerValue) {
+
+        overallImportance[innerIndex] += innerValue;
+
+    });
+
+
+    var total = 0;
+
+    $.each(overallImportance, function(index, value){
+
+        if(value < 0){
+            value *= -1;
+        }
+        total += value;
+
+    });
+
+    var overallImportancePercent = [];
+
+    $.each(overallImportance, function(index, value){
+
+        overallImportancePercent.push(value / total);
+
+    });
+
+    console.log(overallImportancePercent);
+
+    createBarGraph(overallImportancePercent, 'overallImportance', "Contribution scores of entered point")
 }
 

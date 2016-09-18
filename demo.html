@@ -207,7 +207,7 @@
             <h4>Done? Let's start training!</h4>
             <button id="trainStart" class="form-control form-group-lg">Train!</button>
             <div id="errorGraph" class="col-md-8"></div>
-            <div id="performance" class="col-md-4">
+            <div id="performance" class="col-md-4 fontLarge">
                 <div class="col-md-12">
                     <div class="left" id="currError">
                         Current Error:
@@ -249,16 +249,16 @@
                 </label>
                 <button id="predict" class="btn btn-default">Analyze Custom Point</button>
             </div>
-            <div class="col-md-12">
-                <div class="col-md-8">
-                    Input point goes here
+            <div class="col-md-12 fontLarge"><br>
+                <div class="col-md-8" id="contributeInput">
+                    Input point: <span></span>
                 </div>
                 <div class="col-md-4">
-                    <div class="col-md-12">
-                        Prediction goes here
+                    <div class="col-md-12" id="contributePredict">
+                        Predicted point: <span></span>
                     </div>
-                    <div class="col-md-12">
-                        Actual goes here
+                    <div class="col-md-12" id="contributeActual">
+                        Actual point: <span></span>
                     </div>
                 </div>
             </div>

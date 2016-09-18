@@ -51,76 +51,90 @@ function isCategorical(data){
     return categorical;
 }
 
-function toFinalData(preData, categorical, inputs, outputs){
+function toFinalData(categorical, boolInput){
+
+    return function(preData) {
+
+        preData = transpose(preData);
+
+        var isInput = JSON.parse(JSON.stringify(boolInput));
+
+        var classMap = [];
+        var classContents = {};
+
+        $.each(categorical, function (index, value) {
+
+            if (!value) {
+                classMap.push(index);
+            }
+
+            if (value) {
+
+                var classes = [];
+                $.each(preData[index], function (innerIndex, innerValue) {
+                    if ($.inArray(innerValue, classes) == -1) {
+                        classes.push(innerValue);
+                        classMap.push(index);
+                    }
+                });
+
+                var replaceWith = [];
+                $.each(classes, function (innerIndex, innerValue) {
+                    var temp = [];
+
+                    $.each(preData[index], function (innerInnerIndex, innerInnerValue) {
+                        if (innerInnerValue == innerValue) {
+                            temp.push(1);
+                        } else {
+                            temp.push(0);
+                        }
+                    });
+
+                    replaceWith.push(temp);
+                });
+
+                var toRepeat = isInput[index];
+
+                preData.splice(index, 1);
+                isInput.splice(index, 1);
+
+
+                $.each(replaceWith, function (innerIndex, innerValue) {
+                    preData.splice(index, 0, innerValue);
+                    isInput.splice(index, 0, toRepeat)
+                });
+
+                classContents[index] = classes;
+            }
+
+        });
+
+        return {classMap: classMap, data: transpose(preData), isInput: isInput, classContents: classContents};
+    }
+
+}
+
+function removeUnusedColumns(preData, categorical, inputs, outputs){
 
     var isInput = JSON.parse(JSON.stringify(categorical));
 
     //preData and categorical should have the same amount of elements
-    if(preData[0].length != categorical.length){
+    if (preData[0].length != categorical.length) {
         return -1;
     }
 
     preData = transpose(preData);
 
     //get rid of unused columns
-    for(var i = preData.length - 1; i >= 0; i--){
-        if(inputs.indexOf(i) == -1 && outputs.indexOf(i) == -1){
+    for (var i = preData.length - 1; i >= 0; i--) {
+        if (inputs.indexOf(i) == -1 && outputs.indexOf(i) == -1) {
             preData.splice(i, 1);
             categorical.splice(i, 1);
             isInput.splice(i, 1);
         } else isInput[i] = inputs.indexOf(i) != -1;
     }
-    
-    var classesOut = [];
 
-    $.each(categorical, function(index, value){
-
-        if(!value){
-            classesOut.push(index);
-        }
-
-        if(value){
-
-            //make a list of classes
-            var classes = [];
-            $.each(preData[index], function(innerIndex, innerValue){
-                if($.inArray(innerValue, classes) == -1){
-                    classes.push(innerValue);
-                    classesOut.push(index);
-                }
-            });
-
-            var replaceWith = [];
-            $.each(classes, function(innerIndex, innerValue){
-                var temp = [];
-
-                $.each(preData[index], function(innerInnerIndex, innerInnerValue){
-                    if(innerInnerValue == innerValue){
-                        temp.push(1);
-                    } else {
-                        temp.push(0);
-                    }
-                });
-
-                replaceWith.push(temp);
-            });
-
-            var toRepeat = isInput[index];
-
-            preData.splice(index, 1);
-            isInput.splice(index, 1);
-
-
-            $.each(replaceWith, function(innerIndex, innerValue){
-                preData.splice(index, 0, innerValue);
-                isInput.splice(index, 0, toRepeat)
-            });
-        }
-
-    });
-    
-    return {classes: classesOut, data:transpose(preData), isInput:isInput};
-
+    return {data: transpose(preData), isInput: isInput, categorical: categorical};
 }
 
 function createNetwork(layerArray){
@@ -208,7 +222,7 @@ function normalize(data){
         normalizeParams.push(temp);
     });
 
-    return function(dataToNormalize){
+    return {normalizer: function(dataToNormalize){
 
         var transposed = transpose(dataToNormalize);
 
@@ -225,7 +239,7 @@ function normalize(data){
 
         return transpose(transposed);
 
-    }
+    }, params: normalizeParams}
 }
 
 function round(number, precision) {
@@ -379,4 +393,101 @@ function contribution(network){
     }
 
 
+}
+
+function transformDataPoint(isInput, classContents, point, normalizer){
+
+    //ASSUMPTION: the input point has no output
+    //order of operations:
+    //modify wrt classMap
+    //insert a dummy number for the outputs
+    //expand the classes
+    //send it to create training data
+    //take the returned object and get the ready-to-go data point
+
+    var expandLocs = Object.keys(classContents);
+
+
+    $.each(isInput, function(index, value){
+
+        var isClass = expandLocs.indexOf("" + index) != -1;
+
+        if(!value && !isClass){
+            point.splice(index, 0, 'out');
+        } else if (!value && isClass){
+            for(var i = 0; i < classContents[index].length; i++){
+                point.splice(index, 0, 'out');
+            }
+        } else if (value && isClass){
+
+            var classIndex = classContents[index].indexOf(point[index]);
+
+            for(i = 0; i < classContents[index].length - 1; i++){
+                if( i == classIndex){
+                    point.splice(index + 1, 0, 1);
+                } else {
+                    point.splice(index + 1, 0, 0);
+                }
+
+            }
+
+        }
+
+    });
+
+    var trainData = createTrainingData([point], isInput, normalizer);
+
+    return trainData[0].input;
+}
+
+function unTransformDataPoint(isInput, classContents, point){
+
+    //we have to go through this array backwards
+
+    for(var index = point.length; index > -1; index--){
+        var outputs = [];
+        //if it's an output store it somewhere else
+        if(!isInput[index]){
+            outputs.push(point[index]);
+            point.splice(index, 1);
+        } else {
+            if (Object.keys(classContents).indexOf('' + index) != -1) {
+
+                //remove the classes first
+                var removed = point.splice(index, classContents['' + index].length);
+
+                //find the 1 in there - that is the correct class
+                var correctClass = 0;
+
+                $.each(removed, function (innerIndex, innerValue) {
+                    if (innerValue == 1) {
+                        correctClass = innerIndex;
+                    }
+                });
+
+                point.splice(index, 0, classContents['' + index][correctClass]);
+            }
+
+
+        }
+
+
+    }
+
+    return {input: point, output: outputs};
+}
+
+function unTransformOutput(normalizeParams, output, isInput){
+
+    var outputIndex = 0;
+
+    $.each(isInput, function(index, value){
+        if(!value){
+            output[outputIndex] *= normalizeParams[index].range;
+            output[outputIndex] += normalizeParams[index].mean;
+            outputIndex++;
+        }
+    });
+
+    return output;
 }

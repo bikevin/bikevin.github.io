@@ -645,16 +645,16 @@ fieldset[disabled] .btn-danger.active {
   padding-top: 50px;
 }
 
-#performance{
-  font-size: large;
-}
-
 .bar {
   fill: steelblue;
 }
 
 #selectPoint {
   padding-top: 50px;
+}
+
+.fontLarge{
+  font-size: large;
 }
 
 
